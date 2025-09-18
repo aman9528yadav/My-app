@@ -34,6 +34,9 @@ Sutradhaar is more than just a simple utility app. It's a comprehensive producti
 -   **Quick Inserts**: Insert the result of your last conversion or calculation directly into your notes, streamlining your workflow.
 -   **Organization**: Categorize your notes and favorite them for easy retrieval. A recycle bin ensures you never accidentally lose important information.
 -   **Note Security**: Lock individual notes with a password for an extra layer of privacy.
+-   **Web Clipper**: Save articles, images, and selected text from anywhere on the web directly to your notepad with our companion browser extension.
+-   **Reminders & Due Dates**: Attach reminders and due dates to your notes to stay on top of your tasks. Get notified when a deadline is approaching.
+-   **Note Templates**: Create and reuse templates for your recurring notes, like meeting agendas or weekly planners.
 
 ### 統合された (Tōgō-sareta - Integrated) Productivity
 
