@@ -807,5 +807,3 @@ export function DevPanel() {
         </div>
     );
 }
-
-    
