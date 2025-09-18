@@ -2,11 +2,12 @@ import { Editor } from "@tiptap/react";
 import {
   Bold, Strikethrough, Italic, Undo, Redo, Underline, Heading1, Heading2, Heading3, List, ListOrdered, Code2, CheckSquare,
   Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Link2, Quote, Minus, Table as TableIcon,
-  Columns2, Rows2, Trash2, ArrowUpFromLine, ArrowDownFromLine, ArrowLeftFromLine, ArrowRightFromLine, Palette
+  Columns2, Rows2, Trash2, ArrowUpFromLine, ArrowDownFromLine, ArrowLeftFromLine, ArrowRightFromLine, Palette, Pilcrow, ChevronDown
 } from "lucide-react";
 import { Button } from "./button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useCallback } from "react";
+import { Toggle } from "./toggle";
 
 const RichTextEditorToolbar = ({ editor }: { editor: Editor | null }) => {
   const setLink = useCallback(() => {
@@ -35,30 +36,18 @@ const RichTextEditorToolbar = ({ editor }: { editor: Editor | null }) => {
 
   return (
     <div className="border border-input bg-transparent rounded-md p-1 flex flex-row items-center gap-1 flex-wrap">
-      {/* Basic Formatting */}
-      <Button size="icon" variant={editor.isActive("bold") ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleBold().run()}>
-        <Bold className="w-4 h-4" />
-      </Button>
-      <Button size="icon" variant={editor.isActive("italic") ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleItalic().run()}>
-        <Italic className="w-4 h-4" />
-      </Button>
-      <Button size="icon" variant={editor.isActive("underline") ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleUnderline().run()}>
-        <Underline className="w-4 h-4" />
-      </Button>
-      <Button size="icon" variant={editor.isActive("strike") ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleStrike().run()}>
-        <Strikethrough className="w-4 h-4" />
-      </Button>
       
-      <div className="h-6 border-l border-input mx-1" />
-
-      {/* Headings */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost">
-            <Heading1 className="w-4 h-4" />
+          <Button variant="ghost" className="h-8 px-2">
+            <span className="text-sm font-medium">Paragraph</span>
+            <ChevronDown className="w-4 h-4 ml-1" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setParagraph().run()}>
+            <Pilcrow className="w-4 h-4 mr-2" /> Paragraph
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
             <Heading1 className="w-4 h-4 mr-2" /> Heading 1
           </DropdownMenuItem>
@@ -70,60 +59,50 @@ const RichTextEditorToolbar = ({ editor }: { editor: Editor | null }) => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      
+      <div className="h-6 border-l border-input mx-1" />
 
-      {/* Alignment */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost">
-            <AlignLeft className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('left').run()}>
-            <AlignLeft className="w-4 h-4 mr-2" /> Left
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('center').run()}>
-            <AlignCenter className="w-4 h-4 mr-2" /> Center
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('right').run()}>
-            <AlignRight className="w-4 h-4 mr-2" /> Right
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('justify').run()}>
-            <AlignJustify className="w-4 h-4 mr-2" /> Justify
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Basic Formatting */}
+      <Toggle size="sm" pressed={editor.isActive("bold")} onPressedChange={() => editor.chain().focus().toggleBold().run()}>
+        <Bold className="w-4 h-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("italic")} onPressedChange={() => editor.chain().focus().toggleItalic().run()}>
+        <Italic className="w-4 h-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("underline")} onPressedChange={() => editor.chain().focus().toggleUnderline().run()}>
+        <Underline className="w-4 h-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("strike")} onPressedChange={() => editor.chain().focus().toggleStrike().run()}>
+        <Strikethrough className="w-4 h-4" />
+      </Toggle>
 
       <div className="h-6 border-l border-input mx-1" />
 
       {/* Lists */}
-      <Button size="icon" variant={editor.isActive("bulletList") ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+      <Toggle size="sm" pressed={editor.isActive("bulletList")} onPressedChange={() => editor.chain().focus().toggleBulletList().run()}>
         <List className="w-4 h-4" />
-      </Button>
-      <Button size="icon" variant={editor.isActive("orderedList") ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("orderedList")} onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}>
         <ListOrdered className="w-4 h-4" />
-      </Button>
-      <Button size="icon" variant={editor.isActive("taskList") ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleTaskList().run()}>
+      </Toggle>
+       <Toggle size="sm" pressed={editor.isActive("taskList")} onPressedChange={() => editor.chain().focus().toggleTaskList().run()}>
         <CheckSquare className="w-4 h-4" />
-      </Button>
+      </Toggle>
 
       <div className="h-6 border-l border-input mx-1" />
-
+      
       {/* Insertables */}
-      <Button size="icon" variant={editor.isActive('link') ? "secondary" : "ghost"} onClick={setLink}>
+      <Toggle size="sm" pressed={editor.isActive('link')} onPressedChange={setLink}>
         <Link2 className="w-4 h-4" />
-      </Button>
-      <Button size="icon" variant={editor.isActive('blockquote') ? "secondary" : "ghost"} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive('blockquote')} onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}>
         <Quote className="w-4 h-4" />
-      </Button>
-      <Button size="icon" variant="ghost" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
-        <Minus className="w-4 h-4" />
-      </Button>
-
-      {/* Table Controls */}
+      </Toggle>
+      
+       {/* Table Controls */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost">
+          <Button size="icon" variant="ghost" className="h-8 w-8">
             <TableIcon className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -147,10 +126,10 @@ const RichTextEditorToolbar = ({ editor }: { editor: Editor | null }) => {
       <div className="h-6 border-l border-input mx-1" />
 
       {/* History */}
-      <Button size="icon" variant="ghost" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
+      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
         <Undo className="w-4 h-4" />
       </Button>
-      <Button size="icon" variant="ghost" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
+      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
         <Redo className="w-4 h-4" />
       </Button>
     </div>
