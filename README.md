@@ -1,20 +1,60 @@
-
 # 📱 Sutradhaar
 
 **A smart, all-in-one Unit Converter, Calculator, and Notes app.**
 
 Sutradhaar is a modern and intuitive productivity tool built with Next.js and Firebase. It's designed to be simple, fast, and beautiful, helping you manage calculations, conversions, and notes seamlessly in one place.
 
-## ✨ Features
+## ✨ Features In Detail
 
--   **🔄 Unit Converter**: Effortlessly convert between various units, including length, weight, temperature, data, time, speed, area, and volume.
--   **➗ Calculator**: Perform quick calculations with a clean interface and history tracking.
--   **📝 Notes**: A rich-text editor to jot down important information, complete with attachments and formatting options.
--   **📜 Unified History**: View your past conversions and calculations in one organized place.
--   **⭐ Favorites**: Save frequently used conversions for quick and easy access.
--   **🔐 Authentication**: Secure user login and signup to keep your data safe and synced.
--   **🎨 Customizable UI**: Personalize your experience with multiple themes.
--   **🤖 AI-Powered**: Use natural language to perform conversions (e.g., "10km to miles").
+Sutradhaar is more than just a simple utility app. It's a comprehensive productivity suite designed to be your go-to tool for everyday tasks.
+
+### 🔄 Smart Unit Converter
+
+-   **Natural Language Processing**: Simply type what you want to convert, like `"10km to miles"` or `"150 lbs in kg"`. Our AI-powered engine understands you and provides instant, accurate results.
+-   **Comprehensive Categories**: Convert between a wide array of units across categories including:
+    -   **Length**: Meters, Kilometers, Miles, Feet, Inches, etc.
+    -   **Weight**: Kilograms, Grams, Pounds, Ounces, etc.
+    -   **Temperature**: Celsius, Fahrenheit, Kelvin.
+    -   **Data Storage**: Bytes, Megabytes, Gigabytes, Terabytes.
+    -   **Time, Speed, Area, and Volume**.
+-   **Regional Units**: Includes region-specific units (e.g., Gaj, Bigha for India) to make conversions relevant to your location.
+-   **Favorites**: Save your most-used conversions for one-tap access. No more repetitive selections!
+
+### ➗ Advanced Calculator
+
+-   **Clean & Modern Interface**: A beautifully designed calculator that is a pleasure to use.
+-   **Calculation History**: Every calculation is automatically saved. Tap on any past entry to reuse it in a new calculation.
+-   **Physical & Original Themes**: Switch between a sleek, modern calculator and a fun, physical-themed one for a different tactile experience.
+-   **Fullscreen Mode**: Go fullscreen for an immersive, focused calculation environment.
+
+### 📝 Intelligent Notepad
+
+-   **Rich-Text Editor**: Go beyond plain text. Format your notes with headings, bold, italics, lists, and more to organize your thoughts.
+-   **Attachments**: Easily attach images and other files directly to your notes.
+-   **Quick Inserts**: Insert the result of your last conversion or calculation directly into your notes, streamlining your workflow.
+-   **Organization**: Categorize your notes and favorite them for easy retrieval. A recycle bin ensures you never accidentally lose important information.
+-   **Note Security**: Lock individual notes with a password for an extra layer of privacy.
+
+### 統合された (Tōgō-sareta - Integrated) Productivity
+
+-   **Unified History**: No more switching between tools. View a combined history of all your past conversions and calculations in one organized timeline.
+-   **Cross-Tool Integration**: The "last result" from the converter or calculator is always available to be inserted into a note, creating a seamless flow of information.
+
+### 🎨 Unmatched Customization
+
+-   **Personalized Themes**: Make Sutradhaar truly yours. Choose from a variety of pre-built themes like *Retro*, *Glassmorphism*, and *Nord*, or become a **Premium Member** to unlock the Theme Editor and create your own unique color scheme.
+-   **Custom Units & Categories**: A powerful premium feature that allows you to add your own units to existing categories or even create entirely new conversion categories from scratch. Perfect for specialized, professional, or even fictional conversions!
+-   **Flexible Layouts**: View your notes in either a list or a grid layout, and sort them by date modified, date created, or title.
+
+### 🤖 AI-Powered Core
+
+-   **Natural Language Conversion**: At the heart of our converter is a sophisticated AI model that parses plain English (and more languages to come) into structured conversion data.
+-   **Smart Suggestions**: The app learns from your usage to suggest relevant conversion categories.
+
+### 🔐 Secure & Synchronized
+
+-   **Firebase Authentication**: Secure user login and signup to keep your data safe.
+-   **Cloud Sync**: Your notes, history, favorites, and preferences are automatically synced across all your devices when you're logged in.
 
 ## 🛠️ Tech Stack
 
