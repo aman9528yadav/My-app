@@ -43,13 +43,13 @@ type UserRole = 'Member' | 'Premium Member' | 'Owner';
 const regions: Region[] = ['International', 'India', 'Japan', 'Korea', 'China', 'Middle East'];
 
 
-const SettingRow = ({ label, description, control, isLink = false, href, children, onLockClick, isPremium = false }: { label:string, description?:string, control?:React.ReactNode, isLink?:boolean, href?:string, children?:React.ReactNode, onLockClick?:()=>void, isPremium?: boolean }) => {
+const SettingRow = ({ label, description, control, isLink = false, href, children, onLockClick, isPremium = false, isLocked = false }: { label:string, description?:string, control?:React.ReactNode, isLink?:boolean, href?:string, children?:React.ReactNode, onLockClick?:()=>void, isPremium?: boolean, isLocked?: boolean }) => {
     const content = (
         <div className="flex justify-between items-center py-4">
             <div className="flex-1 pr-4">
                 <div className="flex items-center gap-2">
                     {isPremium && (
-                         <Star className={cn("h-4 w-4 text-yellow-400 fill-yellow-400")} />
+                         <Star className={cn("h-4 w-4", isLocked ? "text-muted-foreground" : "text-yellow-400 fill-yellow-400")} />
                     )}
                     <p className="font-medium">{label}</p>
                 </div>
@@ -66,19 +66,19 @@ const SettingRow = ({ label, description, control, isLink = false, href, childre
     const wrapperProps = isLink && href ? { href } : {};
 
     const handleClick = (e: React.MouseEvent) => {
-        if (isPremium && onLockClick) {
+        if (isLocked && onLockClick) {
             e.preventDefault();
             onLockClick();
         }
     };
 
     if (isLink && href) {
-        return <Link href={href} onClick={isPremium ? handleClick : undefined} className="px-4 border-b last:border-b-0 block">{content}</Link>;
+        return <Link href={href} onClick={isLocked ? handleClick : undefined} className="px-4 border-b last:border-b-0 block">{content}</Link>;
     }
 
 
     return (
-        <div className="px-4 border-b last:border-b-0" onClick={isPremium ? handleClick : undefined}>
+        <div className="px-4 border-b last:border-b-0" onClick={isLocked ? handleClick : undefined}>
             {content}
             {children && <div className="pt-3">{children}</div>}
         </div>
@@ -263,9 +263,7 @@ export function Settings() {
       themes.push({ name: 'Custom', value: 'custom', isPremium: true });
   }
 
-  const isCustomizeThemeLocked = userRole === 'Member';
-  const isScientificModeLocked = userRole === 'Member';
-  const isCustomUnitsLocked = userRole === 'Member';
+  const isPremiumFeatureLocked = userRole === 'Member';
   
   const handlePremiumLockClick = () => {
     router.push('/premium');
@@ -360,7 +358,8 @@ export function Settings() {
                             href="/settings/theme"
                             label={t('settings.appearance.customizeTheme.label')}
                             description={t('settings.appearance.customizeTheme.description')}
-                            isPremium={isCustomizeThemeLocked}
+                            isPremium={true}
+                            isLocked={isPremiumFeatureLocked}
                             onLockClick={handlePremiumLockClick}
                         />
                     </AccordionContent>
@@ -397,8 +396,11 @@ export function Settings() {
                          <SettingRow
                             label="Default Home Page"
                             description="Choose the first page you see"
+                            isPremium={true}
+                            isLocked={isPremiumFeatureLocked}
+                            onLockClick={handlePremiumLockClick}
                             control={
-                                 <Select value={defaultPage} onValueChange={(value) => setDefaultPage(value as DefaultPage)}>
+                                 <Select value={defaultPage} onValueChange={(value) => setDefaultPage(value as DefaultPage)} disabled={isPremiumFeatureLocked}>
                                     <SelectTrigger className="w-40"><SelectValue/></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="dashboard">Dashboard</SelectItem>
@@ -439,8 +441,11 @@ export function Settings() {
                     <AccordionContent className="p-0 bg-card border-t-0 rounded-b-lg border mt-[-8px] pt-2">
                          <SettingRow
                             label={t('settings.unitConverter.defaultRegion')}
+                            isPremium={true}
+                            isLocked={isPremiumFeatureLocked}
+                            onLockClick={handlePremiumLockClick}
                             control={
-                                <Select value={defaultRegion} onValueChange={(v) => setDefaultRegion(v as Region)}>
+                                <Select value={defaultRegion} onValueChange={(v) => setDefaultRegion(v as Region)} disabled={isPremiumFeatureLocked}>
                                     <SelectTrigger className="w-48">
                                         <SelectValue placeholder="Select a region" />
                                     </SelectTrigger>
@@ -454,8 +459,11 @@ export function Settings() {
                          />
                          <SettingRow
                             label="Default Category"
+                            isPremium={true}
+                            isLocked={isPremiumFeatureLocked}
+                            onLockClick={handlePremiumLockClick}
                             control={
-                                <Select value={defaultCategory} onValueChange={(v) => setDefaultCategory(v)}>
+                                <Select value={defaultCategory} onValueChange={(v) => setDefaultCategory(v)} disabled={isPremiumFeatureLocked}>
                                     <SelectTrigger className="w-48">
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
@@ -472,7 +480,8 @@ export function Settings() {
                             href="/settings/custom-units"
                             label={t('settings.unitConverter.customUnit.label')}
                             description={t('settings.unitConverter.customUnit.description')}
-                            isPremium={isCustomUnitsLocked}
+                            isPremium={true}
+                            isLocked={isPremiumFeatureLocked}
                             onLockClick={handlePremiumLockClick}
                         />
                          <SettingRow
@@ -493,20 +502,21 @@ export function Settings() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-0 bg-card border-t-0 rounded-b-lg border mt-[-8px] pt-2">
-                        <div onClick={() => isScientificModeLocked && handlePremiumLockClick()} className={cn(isScientificModeLocked && "cursor-pointer")}>
+                        <div onClick={() => isPremiumFeatureLocked && handlePremiumLockClick()} className={cn(isPremiumFeatureLocked && "cursor-pointer")}>
                             <SettingRow
                                 label={t('settings.calculator.mode.label')}
                                 description={t('settings.calculator.mode.description')}
-                                isPremium={isScientificModeLocked}
+                                isPremium={true}
+                                isLocked={isPremiumFeatureLocked}
                                 onLockClick={handlePremiumLockClick}
                                 control={
-                                    <Select value={calculatorMode} onValueChange={(v) => { if(!isScientificModeLocked) setCalculatorMode(v as CalculatorMode) }}>
+                                    <Select value={calculatorMode} onValueChange={(v) => { if(!isPremiumFeatureLocked) setCalculatorMode(v as CalculatorMode) }} disabled={isPremiumFeatureLocked}>
                                         <SelectTrigger className="w-32">
                                             <SelectValue/>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="basic">{t('settings.calculator.modes.basic')}</SelectItem>
-                                            <SelectItem value="scientific" onSelect={(e) => {if(isScientificModeLocked) e.preventDefault()}}>{t('settings.calculator.modes.scientific')}</SelectItem>
+                                            <SelectItem value="scientific" onSelect={(e) => {if(isPremiumFeatureLocked) e.preventDefault()}}>{t('settings.calculator.modes.scientific')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 }

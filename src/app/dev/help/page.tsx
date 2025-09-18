@@ -1,4 +1,6 @@
 
+"use client";
+
 import { HelpEditor } from "@/components/dev/help-editor";
 
 export default function HelpEditorPage() {
