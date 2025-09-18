@@ -6,11 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-<<<<<<< HEAD
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, Check, MoreVertical, Calendar as CalendarIcon, Bell, Copy, BookCopy, Eraser } from 'lucide-react';
-=======
 import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar as CalendarIcon, Bell, Plus, Minus, Heading3 } from 'lucide-react';
->>>>>>> origin/main
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -50,8 +46,6 @@ import { Calendar as CalendarPicker } from './ui/calendar';
 import { addNotification } from '@/lib/notifications';
 import { format, parseISO, setHours, setMinutes, setSeconds } from 'date-fns';
 import { CharacterCount } from '@tiptap/extension-character-count';
-import Color from '@tiptap/extension-color';
-import TextStyle from '@tiptap/extension-text-style';
 import TiptapHighlight from '@tiptap/extension-highlight';
 
 const FONT_COLORS = [
@@ -119,8 +113,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             TableRow,
             TableCell,
             TableHeader,
-            TextStyle,
-            Color,
             TiptapHighlight.configure({ multicolor: true }),
         ],
         content: content,
@@ -339,11 +331,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     };
     
     const handleOpenSaveDialog = () => {
-<<<<<<< HEAD
-         if (!content.trim() && !title.trim()) {
-=======
          if (!editor?.getText().trim()) {
->>>>>>> origin/main
             toast({
                 title: "Cannot save empty note",
                 description: "Please add some content or a title before saving.",
@@ -508,6 +496,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 link.click();
                 toast({ title: "Exported as Image!" });
             } else if (type === 'pdf') {
+                const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF({
                     orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
                     unit: 'px',
@@ -566,19 +555,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     }
 
     return (
-<<<<<<< HEAD
-        <div className="w-full max-w-md mx-auto flex flex-col h-screen bg-background">
-            <header className="flex items-center justify-between p-2 flex-shrink-0 z-10 bg-background/80 backdrop-blur-sm">
-                <Button variant="ghost" size="icon" onClick={handleBack}>
-                    <X />
-                </Button>
-                 <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon"><Undo /></Button>
-                    <Button variant="ghost" size="icon"><Redo /></Button>
-                    <Button variant="ghost" size="icon" onClick={handleOpenSaveDialog}><Save /></Button>
-                    <DropdownMenu>
-                         <DropdownMenuTrigger asChild>
-=======
         <div className="w-full max-w-md mx-auto flex flex-col h-screen bg-card text-card-foreground">
             <header className="flex items-center justify-between p-4 flex-shrink-0">
                 <Button variant="ghost" size="icon" onClick={() => handleOpenSaveDialog()}>
@@ -593,50 +569,11 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
->>>>>>> origin/main
                             <Button variant="ghost" size="icon">
                                 <MoreVertical />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-<<<<<<< HEAD
-                            <DropdownMenuItem onSelect={handleLockToggle}><Lock className="mr-2 h-4 w-4"/> {isLocked ? 'Unlock Note' : 'Lock Note'}</DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}><Paperclip className="mr-2 h-4 w-4"/> Attach File</DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => setShowSaveDialog(true)}><Tag className="mr-2 h-4 w-4"/> Change Category</DropdownMenuItem>
-                             <DropdownMenuSeparator />
-                             <DropdownMenuItem onSelect={() => handleExport('png')}><ImageIcon className="mr-2 h-4 w-4"/> Export as Image</DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => handleExport('txt')}><FileText className="mr-2 h-4 w-4"/> Export as TXT</DropdownMenuItem>
-                             <DropdownMenuSeparator />
-                             <DropdownMenuItem onSelect={handleSoftDelete} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> Delete Note</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                 </div>
-            </header>
-            
-             <div className="px-4 pb-2 flex-shrink-0">
-                <Input 
-                    placeholder="Wonderful Math" 
-                    className="text-2xl font-bold border-none focus-visible:ring-0 p-0 h-auto" 
-                    value={title}
-                    onChange={(e) => {
-                        setTitle(e.target.value);
-                        setIsDirty(true);
-                    }}
-                />
-            </div>
-            
-            <div className={cn("flex-grow flex flex-col gap-4 overflow-y-auto", backgroundStyle && `note-bg-${backgroundStyle}`)}>
-                <div className="flex-1 p-4">
-                    {renderAttachment()}
-                    <RichTextEditor
-                        value={content}
-                        onChange={(newContent) => {
-                            setContent(newContent);
-                            setIsDirty(true);
-                        }}
-                        className={cn("bg-transparent", backgroundStyle && `note-bg-${backgroundStyle}`)}
-                    />
-=======
                             <DropdownMenuItem onSelect={handleSoftDelete}><Trash2 className="mr-2 h-4 w-4"/> Delete Note</DropdownMenuItem>
                              <DropdownMenuItem onSelect={handleLockToggle}><Lock className="mr-2 h-4 w-4"/> {isLocked ? 'Unlock Note' : 'Lock Note'}</DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -719,7 +656,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                         className="text-2xl font-bold border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
                     />
                     <div className='absolute right-4 bottom-2 text-xs text-muted-foreground'>{characterCount}</div>
->>>>>>> origin/main
                 </div>
                  <EditorContent editor={editor} className="flex-grow flex flex-col overflow-y-auto"/>
             </div>
@@ -731,31 +667,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
             </div>
             
-            {/* Bottom Toolbar */}
-            <div className="flex-shrink-0 border-t bg-background p-1">
-                <div className="flex items-center justify-around gap-1 flex-wrap bg-secondary p-1 rounded-lg">
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Palette /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Eraser /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Highlighter /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Italic /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Bold /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Underline /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Strikethrough /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><List /></Button>
-                </div>
-                 <div className="flex items-center justify-around gap-1 flex-wrap mt-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Bell/></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><CalendarIcon/></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => fileInputRef.current?.click()}><Paperclip /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><BookCopy /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><ImageIcon/></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Plus/></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Copy /></Button>
-                </div>
-                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-            </div>
-
             <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
                 <DialogContent>
                     <DialogHeader>
@@ -897,5 +808,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     
 
     
+
 
 
