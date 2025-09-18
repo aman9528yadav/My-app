@@ -1,12 +1,11 @@
 
-
 "use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Menu, Search, MoreVertical, Edit, Star, Trash2, RotateCcw, StickyNote, LayoutGrid, List, Folder, Tag, X, Home, ShieldX, ChevronDown, Lock, FileText, Eye, EyeOff, KeyRound, Plus } from 'lucide-react';
+import { Menu, Search, MoreVertical, Edit, Star, Trash2, RotateCcw, StickyNote, LayoutGrid, List, Folder, Tag, X, Home, ShieldX, ChevronDown, Lock, FileText, Eye, EyeOff, KeyRound, Plus, Bell, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { format, formatDistanceToNow, parseISO, isPast } from 'date-fns';
 import { enUS, hi } from 'date-fns/locale';
 import {
   DropdownMenu,
@@ -40,6 +39,7 @@ import { Label } from './ui/label';
 import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
+import { addNotification } from '@/lib/notifications';
 
 
 export interface Note {
@@ -54,6 +54,10 @@ export interface Note {
     attachment: string | null;
     isLocked: boolean;
     backgroundStyle?: 'none' | 'lines' | 'dots' | 'grid';
+    dueDate?: string | null;
+    reminderAt?: string | null;
+    isWebClip?: boolean;
+    clipURL?: string;
 }
 
 interface UserProfile {
@@ -93,6 +97,34 @@ export function Notepad() {
     type NoteView = 'all' | 'favorites' | 'trash' | 'category';
     type LayoutView = 'list' | 'card';
     type SortKey = 'updatedAt' | 'createdAt' | 'title';
+    
+    // Reminder checking effect
+    useEffect(() => {
+        if (!isClient) return;
+        const checkReminders = () => {
+            const now = new Date();
+            notes.forEach(note => {
+                if (note.reminderAt && !note.deletedAt && !note.isLocked) {
+                    const reminderDate = parseISO(note.reminderAt);
+                    const notifiedKey = `notified_${note.id}`;
+                    if (isPast(reminderDate) && !localStorage.getItem(notifiedKey)) {
+                        addNotification({
+                            title: `Reminder: ${note.title}`,
+                            description: `Your reminder for this note is due.`,
+                            icon: 'info',
+                        });
+                        localStorage.setItem(notifiedKey, 'true');
+                    }
+                }
+            });
+        };
+        
+        const interval = setInterval(checkReminders, 60000); // Check every minute
+        checkReminders(); // Initial check
+        
+        return () => clearInterval(interval);
+    }, [notes, isClient]);
+
 
     useEffect(() => {
         setIsClient(true);
@@ -458,6 +490,11 @@ export function Notepad() {
                             {sortedNotes.map(note => (
                                 <li key={note.id} className={cn("bg-card p-4 rounded-lg flex flex-col justify-between", note.backgroundStyle && `note-bg-${note.backgroundStyle}`)} onClick={() => handleNoteClick(note)}>
                                     <div className="cursor-pointer group">
+                                         {note.isWebClip && note.clipURL && (
+                                            <a href={note.clipURL} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-blue-500 hover:underline truncate block mb-1">
+                                                {note.clipURL}
+                                            </a>
+                                        )}
                                         <div className="flex items-center justify-between">
                                             <h2 className="font-semibold truncate group-hover:text-primary">{note.title || t('notepad.untitled')}</h2>
                                             <div className='flex items-center gap-1'>
@@ -471,6 +508,20 @@ export function Notepad() {
                                         </div>
                                     </div>
                                     <div>
+                                         <div className="flex flex-wrap gap-2 mt-2">
+                                            {note.dueDate && (
+                                                <div className="flex items-center gap-1 text-xs text-red-600 bg-red-100 dark:bg-red-900/50 px-2 py-1 rounded-full">
+                                                    <CalendarIcon size={14} />
+                                                    <span>Due: {format(parseISO(note.dueDate), "d MMM")}</span>
+                                                </div>
+                                            )}
+                                            {note.reminderAt && (
+                                                <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded-full">
+                                                    <Bell size={14} />
+                                                    <span>{format(parseISO(note.reminderAt), "d MMM, h:mm a")}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                         <div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
                                             <span>{format(parseISO(note.updatedAt), "d MMM yyyy, h:mm a", { locale: dateLocale })}</span>
                                             {note.category && <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full">{note.category}</span>}
