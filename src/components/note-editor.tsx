@@ -2,11 +2,11 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -40,7 +41,11 @@ import TableHeader from '@tiptap/extension-table-header';
 import RichTextEditorToolbar from './ui/rich-text-editor-toolbar';
 import { ScrollArea, ScrollBar } from './ui/scroll-area';
 import { Toggle } from './ui/toggle';
-
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Calendar as CalendarPicker } from './ui/calendar';
+import { addNotification } from '@/lib/notifications';
+import { format, parseISO } from 'date-fns';
+import { CharacterCount } from '@tiptap/extension-character-count';
 
 const FONT_COLORS = [
   { name: 'Default', color: 'inherit' },
@@ -80,6 +85,10 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     const [showPremiumLockDialog, setShowPremiumLockDialog] = useState(false);
     const [backgroundStyle, setBackgroundStyle] = useState<'none' | 'lines' | 'dots' | 'grid'>('none');
     const [showSaveDialog, setShowSaveDialog] = useState(false);
+    const [dueDate, setDueDate] = useState<Date | null>(null);
+    const [reminderAt, setReminderAt] = useState<Date | null>(null);
+    const [isWebClip, setIsWebClip] = useState(false);
+    const [clipURL, setClipURL] = useState('');
 
 
     const router = useRouter();
@@ -89,7 +98,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     
     const editor = useEditor({
         extensions: [
-            StarterKit.configure({ codeBlock: false }),
+            StarterKit.configure({ codeBlock: false, characterCount: false }),
+            CharacterCount,
             TiptapUnderline,
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
             TiptapLink.configure({ openOnClick: true, autolink: true, linkOnPaste: true }),
@@ -148,6 +158,10 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     setAttachment(noteToEdit.attachment || null);
                     setIsLocked(noteToEdit.isLocked || false);
                     setBackgroundStyle(noteToEdit.backgroundStyle || 'none');
+                    if (noteToEdit.dueDate) setDueDate(parseISO(noteToEdit.dueDate));
+                    if (noteToEdit.reminderAt) setReminderAt(parseISO(noteToEdit.reminderAt));
+                    setIsWebClip(noteToEdit.isWebClip || false);
+                    setClipURL(noteToEdit.clipURL || '');
                 }
             }
             return;
@@ -165,6 +179,10 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     setAttachment(noteToEdit.attachment || null);
                     setIsLocked(noteToEdit.isLocked || false);
                     setBackgroundStyle(noteToEdit.backgroundStyle || 'none');
+                    if (noteToEdit.dueDate) setDueDate(parseISO(noteToEdit.dueDate));
+                    if (noteToEdit.reminderAt) setReminderAt(parseISO(noteToEdit.reminderAt));
+                    setIsWebClip(noteToEdit.isWebClip || false);
+                    setClipURL(noteToEdit.clipURL || '');
                 } else {
                     toast({ title: t('noteEditor.toast.notFound'), variant: "destructive" });
                     router.push('/notes');
@@ -289,6 +307,10 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 deletedAt: null,
                 isLocked,
                 backgroundStyle,
+                dueDate: dueDate?.toISOString() || null,
+                reminderAt: reminderAt?.toISOString() || null,
+                isWebClip: false,
+                clipURL: '',
             };
             notes.push(newNote);
         } else {
@@ -304,6 +326,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     updatedAt: now,
                     isLocked,
                     backgroundStyle,
+                    dueDate: dueDate?.toISOString() || null,
+                    reminderAt: reminderAt?.toISOString() || null,
                 };
             }
         }
@@ -493,6 +517,41 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                             <DropdownMenuItem onSelect={() => handleExport('png')}><ImageIcon className="mr-2 h-4 w-4" /> Export as Image</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleExport('txt')}><FileText className="mr-2 h-4 w-4" /> Export as TXT</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleExport('pdf')}><Download className="mr-2 h-4 w-4" /> Export as PDF</DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onSelect={() => showComingSoonToast()}><BookCopy className="mr-2 h-4 w-4" /> Use Template</DropdownMenuItem>
+                             <DropdownMenuItem>
+                                <div className="flex flex-col w-full">
+                                    <Label className="text-xs text-muted-foreground">Due Date</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
+                                                <Calendar className="mr-2 h-4 w-4" />
+                                                {dueDate ? format(dueDate, 'PPP') : 'Set Date'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={setDueDate} />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </DropdownMenuItem>
+                             <DropdownMenuItem>
+                                 <div className="flex flex-col w-full">
+                                    <Label className="text-xs text-muted-foreground">Reminder</Label>
+                                     <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
+                                                <Bell className="mr-2 h-4 w-4" />
+                                                {reminderAt ? format(reminderAt, 'Pp') : 'Set Reminder'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={setReminderAt} />
+                                            {/* Add time picker here if needed */}
+                                        </PopoverContent>
+                                    </Popover>
+                                 </div>
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -514,7 +573,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
 
 
             {/* Bottom Toolbar */}
-            <div className="flex-shrink-0 border-t bg-background p-1">
+             <div className="flex-shrink-0 border-t bg-background p-1">
                <RichTextEditorToolbar editor={editor} />
                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
             </div>
