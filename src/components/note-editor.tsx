@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +27,6 @@ import { cn } from '@/lib/utils';
 import { Label } from './ui/label';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import RichTextEditorToolbar from './ui/rich-text-editor-toolbar';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TiptapUnderline from '@tiptap/extension-underline';
@@ -39,6 +38,9 @@ import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
+import RichTextEditorToolbar from './ui/rich-text-editor-toolbar';
+import { ScrollArea, ScrollBar } from './ui/scroll-area';
+import { Toggle } from './ui/toggle';
 
 
 const FONT_COLORS = [
@@ -110,6 +112,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             },
         },
     });
+    
+    const characterCount = editor?.storage.characterCount.characters() || 0;
 
     useEffect(() => {
         if (editor && content && editor.getHTML() !== content) {
@@ -403,7 +407,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 link.click();
                 toast({ title: "Exported as Image!" });
             } else if (type === 'pdf') {
-                const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF({
                     orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
                     unit: 'px',
@@ -462,29 +465,53 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     }
 
     return (
-        <div className="w-full max-w-md mx-auto flex flex-col h-screen">
-            <header className="flex items-center justify-between p-4 flex-shrink-0 sticky top-0 z-50 bg-background">
-                <Button variant="secondary" className="rounded-xl shadow-md" onClick={handleBack}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
+        <div className="w-full max-w-md mx-auto flex flex-col h-screen bg-card text-card-foreground">
+            <header className="flex items-center justify-between p-4 flex-shrink-0">
+                <Button variant="ghost" size="icon" onClick={handleSave}>
+                    <Check />
                 </Button>
-                 <Input
-                    id="note-title"
-                    value={title}
-                    onChange={(e) => {setTitle(e.target.value); setIsDirty(true);}}
-                    placeholder="Untitled Note"
-                    className="flex-1 mx-4 text-lg font-bold border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-center"
-                />
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={handleOpenSaveDialog}>
+                <div className='flex items-center gap-2'>
+                    <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().undo()}>
+                        <Undo />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()}>
+                        <Redo />
+                    </Button>
+                     <Button variant="ghost" size="icon" onClick={() => handleOpenSaveDialog()}>
                         <Save />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={handleSoftDelete}><Trash2 className="mr-2 h-4 w-4"/> Delete Note</DropdownMenuItem>
+                             <DropdownMenuItem onSelect={handleLockToggle}><Lock className="mr-2 h-4 w-4"/> {isLocked ? 'Unlock Note' : 'Lock Note'}</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => handleExport('png')}><ImageIcon className="mr-2 h-4 w-4" /> Export as Image</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleExport('txt')}><FileText className="mr-2 h-4 w-4" /> Export as TXT</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleExport('pdf')}><Download className="mr-2 h-4 w-4" /> Export as PDF</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </header>
-            
-            <div className={cn("bg-card flex-grow flex flex-col gap-4 overflow-y-auto")}>
-                 <EditorContent editor={editor} className="flex-grow flex flex-col"/>
+
+            <div className="flex-grow flex flex-col overflow-hidden">
+                <div className='px-4 pb-2 relative'>
+                     <Input
+                        id="note-title"
+                        value={title}
+                        onChange={(e) => {setTitle(e.target.value); setIsDirty(true);}}
+                        placeholder="Title"
+                        className="text-2xl font-bold border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
+                    />
+                    <div className='absolute right-4 bottom-2 text-xs text-muted-foreground'>{characterCount}</div>
+                </div>
+                 <EditorContent editor={editor} className="flex-grow flex flex-col overflow-y-auto"/>
             </div>
+
 
             {/* Bottom Toolbar */}
             <div className="flex-shrink-0 border-t bg-background p-1">
@@ -621,5 +648,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         </div>
     );
 }
+
 
 

@@ -61,7 +61,6 @@ const RichTextEditor = ({
           `prose dark:prose-invert prose-sm sm:prose-base m-5 focus:outline-none ${className || ''}`,
       },
     },
-    immediatelyRender: false,
   });
 
   return (
