@@ -13,9 +13,8 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import 'highlight.js/styles/atom-one-dark.css';
-
-// The color and code block extensions have been removed to resolve a dependency conflict.
-// If you need this functionality, the underlying `@tiptap/core` and its dependencies must be carefully aligned.
+import Color from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
 
 const RichTextEditor = ({
   value,
@@ -50,6 +49,8 @@ const RichTextEditor = ({
       TableRow,
       TableCell,
       TableHeader,
+      Color,
+      TextStyle,
     ],
     content: value,
     onUpdate: ({ editor }) => {

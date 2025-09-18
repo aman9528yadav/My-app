@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar, Bell, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar, Bell, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -556,7 +556,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                             <DropdownMenuItem onSelect={() => handleExport('pdf')}><Download className="mr-2 h-4 w-4" /> Export as PDF</DropdownMenuItem>
                              <DropdownMenuSeparator />
                              <DropdownMenuItem onSelect={() => applyTemplate('meeting')}><BookCopy className="mr-2 h-4 w-4" /> Use Template</DropdownMenuItem>
-                             <DropdownMenuItem>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                 <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Due Date</Label>
                                     <Popover open={isDueDateOpen} onOpenChange={setIsDueDateOpen}>
@@ -567,12 +567,12 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={(date) => { setDueDate(date || null); setIsDueDateOpen(false); }} />
+                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={(date) => { if(date) { setDueDate(date); setIsDueDateOpen(false); } }} />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
                             </DropdownMenuItem>
-                             <DropdownMenuItem>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                  <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Reminder</Label>
                                      <Popover open={isReminderOpen} onOpenChange={setIsReminderOpen}>
@@ -583,7 +583,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={(date) => { setReminderAt(date || null); setIsReminderOpen(false); }} />
+                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={(date) => { if(date) { setReminderAt(date); setIsReminderOpen(false); } }} />
                                             {/* Add time picker here if needed */}
                                         </PopoverContent>
                                     </Popover>
