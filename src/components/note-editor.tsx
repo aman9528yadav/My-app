@@ -98,7 +98,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     
     const editor = useEditor({
         extensions: [
-            StarterKit.configure({ codeBlock: false, characterCount: false }),
+            StarterKit.configure({ codeBlock: false }),
             CharacterCount,
             TiptapUnderline,
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -271,9 +271,35 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         setIsDirty(true);
     }
     
-    const showComingSoonToast = () => {
-        toast({ title: t('noteEditor.toast.comingSoon.title'), description: t('noteEditor.toast.comingSoon.description')});
-    }
+    const applyTemplate = (template: 'meeting') => {
+        if (!editor) return;
+        
+        let templateContent = '';
+        if (template === 'meeting') {
+            const today = format(new Date(), 'PPP');
+            templateContent = `
+                <h2>Meeting Agenda</h2>
+                <p><strong>Date:</strong> ${today}</p>
+                <p><strong>Attendees:</strong> </p>
+                <p><strong>Timekeeper:</strong> </p>
+                <p><strong>Note Taker:</strong> </p>
+                <h3>Topics:</h3>
+                <ul>
+                    <li><p>Topic 1</p></li>
+                    <li><p>Topic 2</p></li>
+                </ul>
+                <h3>Action Items:</h3>
+                <ul data-type="taskList">
+                    <li><label><input type="checkbox"><span></span></label><div><p></p></div></li>
+                </ul>
+                <h3>Notes:</h3>
+                <p></p>
+            `;
+        }
+        
+        editor.commands.setContent(templateContent, true);
+        toast({ title: "Template Applied!" });
+    };
     
     const handleOpenSaveDialog = () => {
          if (!editor?.getText().trim()) {
@@ -293,10 +319,22 @@ export function NoteEditor({ noteId }: { noteId: string }) {
 
         const notes: Note[] = [...allNotes];
         const now = new Date().toISOString();
+        const noteIdToSave = isNewNote ? uuidv4() : noteId;
+
+        if (reminderAt) {
+            addNotification({
+                id: noteIdToSave, // Use note ID for the notification
+                title: `Reminder: ${finalTitle}`,
+                description: editor?.getText().substring(0, 50) || 'Check your note.',
+                icon: 'info',
+                triggerAt: reminderAt.getTime(),
+            });
+            toast({ title: "Reminder Set!", description: `You'll be notified at ${format(reminderAt, 'Pp')}`});
+        }
 
         if (isNewNote) {
             const newNote: Note = {
-                id: uuidv4(),
+                id: noteIdToSave,
                 title: finalTitle,
                 content: content,
                 isFavorite: isFavorite || false,
@@ -491,7 +529,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     return (
         <div className="w-full max-w-md mx-auto flex flex-col h-screen bg-card text-card-foreground">
             <header className="flex items-center justify-between p-4 flex-shrink-0">
-                <Button variant="ghost" size="icon" onClick={handleSave}>
+                <Button variant="ghost" size="icon" onClick={() => handleOpenSaveDialog()}>
                     <Check />
                 </Button>
                 <div className='flex items-center gap-2'>
@@ -500,9 +538,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()}>
                         <Redo />
-                    </Button>
-                     <Button variant="ghost" size="icon" onClick={() => handleOpenSaveDialog()}>
-                        <Save />
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -518,7 +553,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                             <DropdownMenuItem onSelect={() => handleExport('txt')}><FileText className="mr-2 h-4 w-4" /> Export as TXT</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleExport('pdf')}><Download className="mr-2 h-4 w-4" /> Export as PDF</DropdownMenuItem>
                              <DropdownMenuSeparator />
-                             <DropdownMenuItem onSelect={() => showComingSoonToast()}><BookCopy className="mr-2 h-4 w-4" /> Use Template</DropdownMenuItem>
+                             <DropdownMenuItem onSelect={() => applyTemplate('meeting')}><BookCopy className="mr-2 h-4 w-4" /> Use Template</DropdownMenuItem>
                              <DropdownMenuItem>
                                 <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Due Date</Label>

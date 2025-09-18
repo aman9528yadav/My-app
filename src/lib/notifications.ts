@@ -13,6 +13,7 @@ export interface AppNotification {
     createdAt: string;
     read: boolean;
     icon: 'info' | 'success' | 'new';
+    triggerAt?: number; // Timestamp for scheduled notification
 }
 
 /**
@@ -40,17 +41,21 @@ function saveNotifications(notifications: AppNotification[]) {
 
 /**
  * Adds a new notification to the list.
- * @param notification - The notification object to add (id, createdAt, read will be handled).
+ * @param notification - The notification object to add (createdAt, read will be handled).
  */
-export function addNotification(notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) {
+export function addNotification(notification: Omit<AppNotification, 'createdAt' | 'read'> & { id?: string }) {
     const newNotification: AppNotification = {
         ...notification,
-        id: uuidv4(),
+        id: notification.id || uuidv4(),
         createdAt: new Date().toISOString(),
         read: false,
     };
     const notifications = getNotifications();
-    const updatedNotifications = [newNotification, ...notifications].slice(0, 20); // Keep max 20
+    
+    // If a notification with the same ID exists, remove it first to "update" it
+    const filteredNotifications = notifications.filter(n => n.id !== newNotification.id);
+
+    const updatedNotifications = [newNotification, ...filteredNotifications].slice(0, 20); // Keep max 20
     saveNotifications(updatedNotifications);
 }
 
