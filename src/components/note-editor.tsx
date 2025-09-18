@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar, Bell } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar, Bell, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -89,6 +89,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     const [reminderAt, setReminderAt] = useState<Date | null>(null);
     const [isWebClip, setIsWebClip] = useState(false);
     const [clipURL, setClipURL] = useState('');
+    const [isDueDateOpen, setIsDueDateOpen] = useState(false);
+    const [isReminderOpen, setIsReminderOpen] = useState(false);
 
 
     const router = useRouter();
@@ -557,7 +559,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                              <DropdownMenuItem>
                                 <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Due Date</Label>
-                                    <Popover>
+                                    <Popover open={isDueDateOpen} onOpenChange={setIsDueDateOpen}>
                                         <PopoverTrigger asChild>
                                             <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
                                                 <Calendar className="mr-2 h-4 w-4" />
@@ -565,7 +567,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={setDueDate} />
+                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={(date) => { setDueDate(date || null); setIsDueDateOpen(false); }} />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -573,7 +575,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                              <DropdownMenuItem>
                                  <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Reminder</Label>
-                                     <Popover>
+                                     <Popover open={isReminderOpen} onOpenChange={setIsReminderOpen}>
                                         <PopoverTrigger asChild>
                                             <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
                                                 <Bell className="mr-2 h-4 w-4" />
@@ -581,7 +583,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={setReminderAt} />
+                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={(date) => { setReminderAt(date || null); setIsReminderOpen(false); }} />
                                             {/* Add time picker here if needed */}
                                         </PopoverContent>
                                     </Popover>
