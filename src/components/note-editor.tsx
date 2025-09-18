@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, Check, MoreVertical, Calendar as CalendarIcon, Bell, Copy, BookCopy, Eraser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -47,7 +47,7 @@ interface UserProfile {
 
 
 export function NoteEditor({ noteId }: { noteId: string }) {
-    const [title, setTitle] = useState('');
+    const [title, setTitle] = useState('Wonderful Math');
     const [content, setContent] = useState('');
     const [category, setCategory] = useState('');
     const [isFavorite, setIsFavorite] = useState(false);
@@ -221,15 +221,15 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     }
     
     const handleOpenSaveDialog = () => {
-         if (!content.trim()) {
+         if (!content.trim() && !title.trim()) {
             toast({
                 title: "Cannot save empty note",
-                description: "Please add some content before saving.",
+                description: "Please add some content or a title before saving.",
                 variant: "destructive"
             });
             return;
         }
-        setShowSaveDialog(true);
+        handleSave();
     }
 
 
@@ -282,7 +282,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             title: t('noteEditor.toast.saved.title'),
             description: t('noteEditor.toast.saved.description'),
         });
-        setShowSaveDialog(false);
         router.push('/notes');
     };
     
@@ -369,7 +368,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 link.click();
                 toast({ title: "Exported as Image!" });
             } else if (type === 'pdf') {
-                const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF({
                     orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
                     unit: 'px',
@@ -428,76 +426,84 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     }
 
     return (
-        <div className="w-full max-w-md mx-auto flex flex-col h-screen">
-            <header className="flex items-center justify-between p-4 flex-shrink-0 sticky top-0 z-50 bg-background">
-                <Button variant="secondary" className="rounded-xl shadow-md" onClick={handleBack}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
+        <div className="w-full max-w-md mx-auto flex flex-col h-screen bg-background">
+            <header className="flex items-center justify-between p-2 flex-shrink-0 z-10 bg-background/80 backdrop-blur-sm">
+                <Button variant="ghost" size="icon" onClick={handleBack}>
+                    <X />
                 </Button>
-                <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon"><Undo /></Button>
+                    <Button variant="ghost" size="icon"><Redo /></Button>
+                    <Button variant="ghost" size="icon" onClick={handleOpenSaveDialog}><Save /></Button>
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                             <Button variant="ghost" size="icon">
-                                <Notebook />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('none'); setIsDirty(true);}}>None</DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('lines'); setIsDirty(true);}}>Lines</DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('dots'); setIsDirty(true);}}>Dots</DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('grid'); setIsDirty(true);}}>Grid</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
-                                <Share2 />
+                                <MoreVertical />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => handleExport('png')}>
-                                <ImageIcon className="mr-2 h-4 w-4" />
-                                <span>Export as Image</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleExport('txt')}>
-                                <FileText className="mr-2 h-4 w-4" />
-                                <span>Export as TXT</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleExport('pdf')}>
-                                <Download className="mr-2 h-4 w-4" />
-                                <span>Export as PDF</span>
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={handleLockToggle}><Lock className="mr-2 h-4 w-4"/> {isLocked ? 'Unlock Note' : 'Lock Note'}</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}><Paperclip className="mr-2 h-4 w-4"/> Attach File</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setShowSaveDialog(true)}><Tag className="mr-2 h-4 w-4"/> Change Category</DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onSelect={() => handleExport('png')}><ImageIcon className="mr-2 h-4 w-4"/> Export as Image</DropdownMenuItem>
+                             <DropdownMenuItem onSelect={() => handleExport('txt')}><FileText className="mr-2 h-4 w-4"/> Export as TXT</DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onSelect={handleSoftDelete} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> Delete Note</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button variant="ghost" size="icon" onClick={handleLockToggle} className={cn(isLocked && "bg-primary/10 text-primary")}>
-                       {isLocked ? <Lock /> : <Unlock/>}
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={handleOpenSaveDialog}>
-                        <Save />
-                    </Button>
-                </div>
+                 </div>
             </header>
             
-            <div className={cn("bg-card p-4 rounded-t-xl flex-grow flex flex-col gap-4", backgroundStyle && `note-bg-${backgroundStyle}`)}>
-                
-                {renderAttachment()}
-
-                 <RichTextEditor
-                    value={content}
-                    onChange={(newContent) => {
-                        setContent(newContent);
+             <div className="px-4 pb-2 flex-shrink-0">
+                <Input 
+                    placeholder="Wonderful Math" 
+                    className="text-2xl font-bold border-none focus-visible:ring-0 p-0 h-auto" 
+                    value={title}
+                    onChange={(e) => {
+                        setTitle(e.target.value);
                         setIsDirty(true);
                     }}
-                    className={cn(backgroundStyle && `note-bg-${backgroundStyle}`)}
                 />
-                <div className="flex items-center gap-2 pt-2 border-t border-border">
-                    <Button variant="ghost" size="icon" onMouseDown={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}>
-                        <Paperclip />
-                    </Button>
-                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-                    <Button variant="ghost" size="icon" onClick={() => showComingSoonToast()}><Smile /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={handleSoftDelete}><Trash2 /></Button>
+            </div>
+            
+            <div className={cn("flex-grow flex flex-col gap-4 overflow-y-auto", backgroundStyle && `note-bg-${backgroundStyle}`)}>
+                <div className="flex-1 p-4">
+                    {renderAttachment()}
+                    <RichTextEditor
+                        value={content}
+                        onChange={(newContent) => {
+                            setContent(newContent);
+                            setIsDirty(true);
+                        }}
+                        className={cn("bg-transparent", backgroundStyle && `note-bg-${backgroundStyle}`)}
+                    />
                 </div>
+            </div>
+            
+            {/* Bottom Toolbar */}
+            <div className="flex-shrink-0 border-t bg-background p-1">
+                <div className="flex items-center justify-around gap-1 flex-wrap bg-secondary p-1 rounded-lg">
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Palette /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Eraser /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Highlighter /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Italic /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Bold /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Underline /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Strikethrough /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><List /></Button>
+                </div>
+                 <div className="flex items-center justify-around gap-1 flex-wrap mt-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Bell/></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><CalendarIcon/></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => fileInputRef.current?.click()}><Paperclip /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><BookCopy /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><ImageIcon/></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Plus/></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Copy /></Button>
+                </div>
+                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
             </div>
 
             <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
