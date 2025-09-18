@@ -64,6 +64,27 @@ function calculateStreakData(visitHistory: string[]): StreakData {
     return { currentStreak, bestStreak, daysNotOpened };
 }
 
+/**
+ * Retrieves streak data for a user.
+ * @param email - The user's email or null for guests.
+ * @returns The user's streak data or default values if not available.
+ */
+export async function getStreakData(email: string | null): Promise<StreakData> {
+    if (!email) {
+        const key = getGuestKey('userVisitHistory');
+        const historyStr = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+        let visitHistory: string[] = historyStr ? JSON.parse(historyStr) : [];
+        return calculateStreakData(visitHistory);
+    }
+    try {
+        const userData = await getUserData(email);
+        return userData.streakData || { currentStreak: 0, bestStreak: 0, daysNotOpened: 0 };
+    } catch (error) {
+        console.error("Error getting streak data:", error);
+        return { currentStreak: 0, bestStreak: 0, daysNotOpened: 0 };
+    }
+}
+
 
 /**
  * Records a visit for the current day and updates streak data.
