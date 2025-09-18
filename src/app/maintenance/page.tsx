@@ -1,0 +1,283 @@
+
+"use client";
+
+import { useState, useEffect } from 'react';
+import { Wrench, Clock, Settings, Zap, Hourglass, Bug, Rocket, Shield, Info, CheckCircle, XCircle, ArrowLeft, KeyRound, Eye, EyeOff, LogIn } from "lucide-react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, intervalToDuration, differenceInDays, parseISO, isValid } from "date-fns";
+import { listenToUpdateInfo, UpdateInfo } from '@/services/firestore';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+const OWNER_EMAIL = "amanyadavyadav9458@gmail.com";
+
+const CountdownBox = ({ value, label }: { value: number; label: string }) => (
+    <div className="bg-primary/10 p-3 rounded-lg text-primary text-center">
+        <p className="text-2xl font-bold">{String(value).padStart(2, '0')}</p>
+        <p className="text-xs text-primary/80">{label}</p>
+    </div>
+);
+
+const FeatureCard = ({ icon: Icon, title, description, className }: { icon: React.ElementType, title: string, description: string, className?: string }) => (
+    <Card className={`bg-card/50 backdrop-blur-sm border-primary/20 text-center flex-1 ${className}`}>
+        <CardHeader className="items-center pb-2">
+            <div className="p-3 bg-primary/10 rounded-full text-primary">
+                <Icon className="w-6 h-6" />
+            </div>
+            <CardTitle className="text-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <p className="text-sm text-muted-foreground">{description}</p>
+        </CardContent>
+    </Card>
+);
+
+const maintenanceTypeMap = {
+    "Security": { icon: Shield, title: "Security Update", description: "Applying the latest security patches to keep your data safe." },
+    "Feature Update": { icon: Rocket, title: "New Features", description: "We're launching exciting new features for you to enjoy." },
+    "Bug Fixes": { icon: Bug, title: "Bug Squashing", description: "Ironing out some wrinkles to improve your experience." },
+    "Performance": { icon: Zap, title: "Performance Boost", description: "Making the app faster and more responsive." },
+    "Custom": { icon: Info, title: "Update in Progress", description: "We're making some improvements." }
+};
+
+
+export default function MaintenancePage() {
+  const [targetDate, setTargetDate] = useState<Date | null>(null);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [timeLeft, setTimeLeft] = useState<Duration & { totalDays?: number } | null>(null);
+  const [timerFinished, setTimerFinished] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const [showDevLogin, setShowDevLogin] = useState(false);
+  const [devEmail, setDevEmail] = useState('');
+  const [devPassword, setDevPassword] = useState('');
+  const [showDevPassword, setShowDevPassword] = useState(false);
+
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const unsubscribe = listenToUpdateInfo((info: UpdateInfo) => {
+        setUpdateInfo(info);
+        if (info.targetDate && isValid(parseISO(info.targetDate))) {
+            const date = parseISO(info.targetDate);
+            if (date > new Date()) {
+                setTargetDate(date);
+                setTimerFinished(false);
+            } else {
+                setTargetDate(null);
+                setTimerFinished(true);
+            }
+        } else {
+            setTargetDate(null);
+            setTimerFinished(false);
+        }
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!targetDate) {
+        setTimeLeft(null);
+        return;
+    };
+
+    const timer = setInterval(() => {
+      const now = new Date();
+      if (targetDate > now) {
+        const duration = intervalToDuration({ start: now, end: targetDate });
+        const totalDays = differenceInDays(targetDate, now);
+        setTimeLeft({ ...duration, totalDays });
+      } else {
+        setTimeLeft(null);
+        setTimerFinished(true);
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [targetDate]);
+  
+  const handleDevLoginClick = () => {
+    setShowDevLogin(true);
+    setClickCount(0);
+  }
+
+  const handleIconClick = () => {
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+    
+    if (newCount >= 5) {
+      handleDevLoginClick();
+    }
+  };
+
+  const handleDevLogin = () => {
+    const savedDevPassword = localStorage.getItem('developerPassword') || '121312';
+    if (devPassword === savedDevPassword) {
+        setShowDevLogin(false);
+        setDevPassword('');
+        setDevEmail('');
+        router.push('/dev');
+    } else {
+        toast({
+            title: "Access Denied",
+            description: "Incorrect developer password.",
+            variant: "destructive"
+        });
+        setDevPassword('');
+    }
+  }
+  
+  const maintenanceType = updateInfo?.maintenanceType || "Performance";
+  const typeDetails = maintenanceTypeMap[maintenanceType as keyof typeof maintenanceTypeMap] || maintenanceTypeMap['Performance'];
+  const displayTitle = maintenanceType === 'Custom' ? (updateInfo?.customMaintenanceTitle || typeDetails.title) : typeDetails.title;
+
+  return (
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 text-center">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="flex flex-col items-center gap-8 w-full max-w-lg"
+      >
+        <div className="w-full flex justify-start">
+            <Button variant="secondary" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+            </Button>
+        </div>
+
+        <motion.div
+            className="p-4 bg-primary/10 rounded-full cursor-pointer"
+            onClick={handleIconClick}
+            animate={{ rotate: [0, 15, -10, 5, 0], scale: [1, 1.1, 1, 1.1, 1] }}
+            transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 2 }}
+        >
+            <Wrench className="w-10 h-10 text-primary" />
+        </motion.div>
+        
+        <div className="space-y-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground">We'll Be Back Soon!</h1>
+            <div className="flex justify-center">
+               <div className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground p-2 px-4 rounded-full text-sm font-medium">
+                  <typeDetails.icon className="w-5 h-5 text-primary" />
+                  <span>{displayTitle}</span>
+               </div>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {updateInfo?.updateText || "General improvements and bug fixes."}
+            </p>
+        </div>
+        
+        {timeLeft && (
+            <div className="flex gap-2 sm:gap-4">
+                <CountdownBox value={timeLeft.totalDays ?? 0} label="DAYS"/>
+                <CountdownBox value={timeLeft.hours ?? 0} label="HOURS"/>
+                <CountdownBox value={timeLeft.minutes ?? 0} label="MINUTES"/>
+                <CountdownBox value={timeLeft.seconds ?? 0} label="SECONDS"/>
+            </div>
+        )}
+        
+        {!timeLeft && !timerFinished && (
+             <div className="bg-blue-100 border border-blue-200 text-blue-800 p-4 rounded-lg">
+                <p className="font-semibold">The expected completion time has not been set yet. Please check back later.</p>
+            </div>
+        )}
+
+        {timerFinished && updateInfo?.updateStatus === 'success' && (
+            <div className={cn("border p-4 rounded-lg flex items-center gap-4 bg-green-100 border-green-200 text-green-800")}>
+                <CheckCircle className="w-6 h-6" />
+                <p className="font-semibold">{updateInfo.successMessage || 'Update successful! We will be back online shortly.'}</p>
+            </div>
+        )}
+
+        {timerFinished && updateInfo?.updateStatus === 'failed' && (
+             <div className={cn("border p-4 rounded-lg flex items-center gap-4 bg-red-100 border-red-200 text-red-800")}>
+                <XCircle className="w-6 h-6" />
+                <p className="font-semibold">{updateInfo.failureMessage || 'Update encountered an issue. We are working on it.'}</p>
+            </div>
+        )}
+        
+         {timerFinished && updateInfo?.updateStatus === 'inprogress' && (
+            <div className="bg-blue-100 border border-blue-200 text-blue-800 p-4 rounded-lg">
+                <p className="font-semibold">Maintenance done! We will be back in a few minutes.</p>
+            </div>
+        )}
+        
+        <div className="w-full flex flex-col md:flex-row gap-4 mt-4">
+            <FeatureCard 
+                icon={Hourglass}
+                title="Minimal Downtime"
+                description="We're working as quickly as possible to restore service"
+            />
+             <FeatureCard 
+                icon={Zap}
+                title="Better Experience"
+                description="Coming back with improved features and performance"
+            />
+        </div>
+
+        <div className="text-center mt-8">
+            <p className="text-muted-foreground">Or, go to the <Link href="/" className="text-primary hover:underline">homepage</Link>.</p>
+            <p className="text-muted-foreground">Need immediate assistance? Contact Aman at:</p>
+            <a href="mailto:amanyadavyadav9458@gmail.com" className="text-primary hover:underline">
+                amanyadavyadav9458@gmail.com
+            </a>
+        </div>
+
+      </motion.div>
+      <AlertDialog open={showDevLogin} onOpenChange={setShowDevLogin}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2"><KeyRound/> Developer Access</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Enter the developer password to access the developer panel.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-4">
+                 <div>
+                    <Label htmlFor="dev-email">Owner Email</Label>
+                    <Input 
+                        id="dev-email" 
+                        type="email" 
+                        value={devEmail}
+                        onChange={(e) => setDevEmail(e.target.value)}
+                        placeholder="Enter owner email" 
+                    />
+                </div>
+                 <div className="relative">
+                    <Label htmlFor="dev-password">Password</Label>
+                    <Input 
+                        id="dev-password" 
+                        type={showDevPassword ? "text" : "password"} 
+                        value={devPassword}
+                        onChange={(e) => setDevPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleDevLogin()}
+                        placeholder="Enter developer password" 
+                        className="pr-10"
+                    />
+                        <button
+                        type="button"
+                        onClick={() => setShowDevPassword(!showDevPassword)}
+                        className="absolute right-3 top-8 text-muted-foreground"
+                    >
+                        {showDevPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                </div>
+            </div>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDevLogin}>Login</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </main>
+  );
+}
