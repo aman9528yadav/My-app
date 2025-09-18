@@ -1,5 +1,4 @@
 
-<<<<<<< HEAD
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
@@ -7,9 +6,6 @@ import { Converter } from "@/components/converter";
 import MaintenancePage from "@/app/maintenance/page";
 import { listenToUpdateInfo } from '@/services/firestore';
 import { usePathname, useSearchParams } from 'next/navigation';
-=======
-import { Converter } from "@/components/converter";
-import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function ConverterPageSkeleton() {
@@ -53,8 +49,6 @@ function ConverterPageSkeleton() {
     );
 }
 
->>>>>>> eaac25c (i face an erroe in convertor page when deploy in github)
-
 export default function ConverterPage() {
   const [isMaintenance, setIsMaintenance] = useState(false);
   const pathname = usePathname();
@@ -74,13 +68,8 @@ export default function ConverterPage() {
   }
 
   return (
-<<<<<<< HEAD
     <main className="w-full flex-grow p-4 sm:p-6">
-      <Suspense>
-=======
-    <main className="flex min-h-screen w-full flex-col items-center bg-background p-4 sm:p-6">
       <Suspense fallback={<ConverterPageSkeleton />}>
->>>>>>> eaac25c (i face an erroe in convertor page when deploy in github)
         <Converter />
       </Suspense>
     </main>

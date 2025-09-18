@@ -252,7 +252,7 @@ export function UserData() {
                             </Button>
                         </div>
                         
-                        <p className="mt-6 text-xs text-gray-500">© 2025 Sutradhar | Owned by Aman Yadav. v1.5.2</p>
+                        <p className="mt-6 text-xs text-gray-500">© 2025 Sutradhar | Owned by Aman Yadav.</p>
                     </CardContent>
                 </Card>
             </motion.div>
