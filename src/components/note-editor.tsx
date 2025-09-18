@@ -16,7 +16,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
@@ -407,6 +406,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 link.click();
                 toast({ title: "Exported as Image!" });
             } else if (type === 'pdf') {
+                const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF({
                     orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
                     unit: 'px',
@@ -625,7 +625,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     </div>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setShowSetPasswordDialog(false)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleSetInitialPassword}>Set Password & Lock</AlertDialogAction>
+                        <AlertDialogAction onClick={handleSetInitialPassword}>Set Password &amp; Lock</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -651,3 +651,6 @@ export function NoteEditor({ noteId }: { noteId: string }) {
 
 
 
+
+
+    
