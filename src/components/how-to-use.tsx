@@ -160,6 +160,44 @@ export function HowToUse() {
             </div>
         </section>
 
+        <section>
+            <h2 className="text-xl font-bold mb-4">Features In Detail</h2>
+            <div className="prose prose-sm sm:prose-base max-w-none dark:prose-invert bg-card p-6 rounded-xl">
+                <h3>🔄 Smart Unit Converter</h3>
+                <ul>
+                    <li><strong>Natural Language Processing</strong>: Simply type what you want to convert, like <code>"10km to miles"</code> or <code>"150 lbs in kg"</code>. Our AI-powered engine understands you and provides instant, accurate results.</li>
+                    <li><strong>Comprehensive Categories</strong>: Convert between a wide array of units across categories including Length, Weight, Temperature, Data Storage, Time, Speed, Area, and Volume.</li>
+                    <li><strong>Regional Units</strong>: Includes region-specific units (e.g., Gaj, Bigha for India) to make conversions relevant to your location.</li>
+                    <li><strong>Favorites</strong>: Save your most-used conversions for one-tap access. No more repetitive selections!</li>
+                </ul>
+
+                <h3>➗ Advanced Calculator</h3>
+                <ul>
+                    <li><strong>Clean & Modern Interface</strong>: A beautifully designed calculator that is a pleasure to use.</li>
+                    <li><strong>Calculation History</strong>: Every calculation is automatically saved. Tap on any past entry to reuse it in a new calculation.</li>
+                    <li><strong>Physical & Original Themes</strong>: Switch between a sleek, modern calculator and a fun, physical-themed one for a different tactile experience.</li>
+                    <li><strong>Fullscreen Mode</strong>: Go fullscreen for an immersive, focused calculation environment.</li>
+                </ul>
+
+                <h3>📝 Intelligent Notepad</h3>
+                <ul>
+                    <li><strong>Rich-Text Editor</strong>: Go beyond plain text. Format your notes with headings, bold, italics, lists, and more to organize your thoughts.</li>
+                    <li><strong>Attachments</strong>: Easily attach images and other files directly to your notes.</li>
+                    <li><strong>Quick Inserts</strong>: Insert the result of your last conversion or calculation directly into your notes, streamlining your workflow.</li>
+                    <li><strong>Organization</strong>: Categorize your notes and favorite them for easy retrieval. A recycle bin ensures you never accidentally lose important information.</li>
+                    <li><strong>Note Security</strong>: Lock individual notes with a password for an extra layer of privacy.</li>
+                    <li><strong>Reminders & Due Dates</strong>: Attach reminders and due dates to your notes to stay on top of your tasks. Get notified when a deadline is approaching.</li>
+                </ul>
+
+                <h3>🎨 Unmatched Customization</h3>
+                <ul>
+                    <li><strong>Personalized Themes</strong>: Make Sutradhaar truly yours. Choose from a variety of pre-built themes or become a Premium Member to unlock the Theme Editor.</li>
+                    <li><strong>Custom Units & Categories</strong>: A powerful premium feature that allows you to add your own units to existing categories or even create entirely new conversion categories.</li>
+                    <li><strong>Flexible Layouts</strong>: View your notes in either a list or a grid layout, and sort them by date modified, date created, or title.</li>
+                </ul>
+            </div>
+        </section>
+
         <footer className="text-center mt-8">
             <p className="text-muted-foreground">Still have questions? <a href="https://docs.google.com/forms/d/e/1FAIpQLSc-FH5ANa1HRR9sE6OUSRD8HVsZw6JNGWdbwK-5jrUywLnNbQ/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Contact Us</a>.</p>
         </footer>
