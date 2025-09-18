@@ -209,7 +209,7 @@ export function Dashboard() {
     <div className="text-foreground max-w-sm mx-auto">
       {/* STAT CARDS - HORIZONTAL SCROLL */}
       <div className="mb-5">
-        <ScrollArea className="w-full whitespace-nowrap">
+        <ScrollArea className="w-full whitespace-nowrap always-visible-scrollbar">
             <div className="flex gap-3 pb-2">
             {statsData.map((s) => (
                 <div key={s.key} className="min-w-[120px] flex-shrink-0 p-3 rounded-2xl bg-card shadow-sm border">
@@ -296,7 +296,7 @@ export function Dashboard() {
           <h3 className="text-sm font-semibold text-primary">Coming Soon</h3>
           <span className="text-xs text-muted-foreground">Preview</span>
         </div>
-        <ScrollArea className="w-full whitespace-nowrap">
+        <ScrollArea className="w-full whitespace-nowrap always-visible-scrollbar">
             <div className="flex gap-3 pb-2">
             {comingSoonItems.map((item) => (
                 <ComingCard key={item.id} {...item} />
@@ -526,5 +526,7 @@ function InfoItem({ icon, title, subtitle, href }: { icon: React.ReactNode, titl
     }
     return <div>{content}</div>;
 }
+
+    
 
     
