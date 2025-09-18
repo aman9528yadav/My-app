@@ -44,7 +44,7 @@ import { Toggle } from './ui/toggle';
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
 import { Calendar as CalendarPicker } from './ui/calendar';
 import { addNotification } from '@/lib/notifications';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, setHours, setMinutes, setSeconds } from 'date-fns';
 import { CharacterCount } from '@tiptap/extension-character-count';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
@@ -90,6 +90,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [dueDate, setDueDate] = useState<Date | null>(null);
     const [reminderAt, setReminderAt] = useState<Date | null>(null);
+    const [reminderTime, setReminderTime] = useState({ hour: '09', minute: '00' });
     const [isWebClip, setIsWebClip] = useState(false);
     const [clipURL, setClipURL] = useState('');
     const [isDueDateOpen, setIsDueDateOpen] = useState(false);
@@ -151,6 +152,16 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         }
 
     }, []);
+    
+    const handleSetReminder = () => {
+        if (!reminderAt) return;
+        let dateWithTime = setHours(reminderAt, parseInt(reminderTime.hour, 10));
+        dateWithTime = setMinutes(dateWithTime, parseInt(reminderTime.minute, 10));
+        dateWithTime = setSeconds(dateWithTime, 0);
+        setReminderAt(dateWithTime);
+        setIsReminderOpen(false);
+    };
+
 
     useEffect(() => {
         const userEmail = profile?.email || null;
@@ -167,7 +178,14 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     setIsLocked(noteToEdit.isLocked || false);
                     setBackgroundStyle(noteToEdit.backgroundStyle || 'none');
                     if (noteToEdit.dueDate) setDueDate(parseISO(noteToEdit.dueDate));
-                    if (noteToEdit.reminderAt) setReminderAt(parseISO(noteToEdit.reminderAt));
+                    if (noteToEdit.reminderAt) {
+                        const reminderDate = parseISO(noteToEdit.reminderAt);
+                        setReminderAt(reminderDate);
+                        setReminderTime({
+                            hour: format(reminderDate, 'HH'),
+                            minute: format(reminderDate, 'mm')
+                        });
+                    }
                     setIsWebClip(noteToEdit.isWebClip || false);
                     setClipURL(noteToEdit.clipURL || '');
                 }
@@ -187,8 +205,15 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     setAttachment(noteToEdit.attachment || null);
                     setIsLocked(noteToEdit.isLocked || false);
                     setBackgroundStyle(noteToEdit.backgroundStyle || 'none');
-                    if (noteToEdit.dueDate) setDueDate(parseISO(noteToEdit.dueDate));
-                    if (noteToEdit.reminderAt) setReminderAt(parseISO(noteToEdit.reminderAt));
+                     if (noteToEdit.dueDate) setDueDate(parseISO(noteToEdit.dueDate));
+                    if (noteToEdit.reminderAt) {
+                        const reminderDate = parseISO(noteToEdit.reminderAt);
+                        setReminderAt(reminderDate);
+                        setReminderTime({
+                            hour: format(reminderDate, 'HH'),
+                            minute: format(reminderDate, 'mm')
+                        });
+                    }
                     setIsWebClip(noteToEdit.isWebClip || false);
                     setClipURL(noteToEdit.clipURL || '');
                 } else {
@@ -579,10 +604,10 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                     </Popover>
                                 </div>
                             </DropdownMenuItem>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                 <div className="flex flex-col w-full">
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Reminder</Label>
-                                     <Popover open={isReminderOpen} onOpenChange={setIsReminderOpen}>
+                                    <Popover open={isReminderOpen} onOpenChange={setIsReminderOpen}>
                                         <PopoverTrigger asChild>
                                             <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
                                                 <Bell className="mr-2 h-4 w-4" />
@@ -590,11 +615,36 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={setReminderAt} />
-                                            <Button onClick={() => setIsReminderOpen(false)} className="w-full mt-2">Set</Button>
+                                            <CalendarPicker
+                                                mode="single"
+                                                selected={reminderAt ?? undefined}
+                                                onSelect={(date) => {
+                                                    if (date) {
+                                                        const currentReminder = reminderAt || new Date();
+                                                        let newDate = setHours(date, currentReminder.getHours());
+                                                        newDate = setMinutes(newDate, currentReminder.getMinutes());
+                                                        newDate = setSeconds(newDate, 0);
+                                                        setReminderAt(newDate);
+                                                    } else {
+                                                        setReminderAt(null);
+                                                    }
+                                                }}
+                                            />
+                                            <div className="flex items-center gap-2 p-2 border-t">
+                                                <Input
+                                                    type="time"
+                                                    value={reminderTime.hour + ':' + reminderTime.minute}
+                                                    onChange={(e) => {
+                                                        const [hour, minute] = e.target.value.split(':');
+                                                        setReminderTime({ hour, minute });
+                                                    }}
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                            <Button onClick={handleSetReminder} className="w-full mt-2">Set</Button>
                                         </PopoverContent>
                                     </Popover>
-                                 </div>
+                                </div>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -763,4 +813,5 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     
 
     
+
 
