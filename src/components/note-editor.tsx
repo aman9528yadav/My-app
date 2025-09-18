@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +27,18 @@ import { cn } from '@/lib/utils';
 import { Label } from './ui/label';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import RichTextEditor from './ui/rich-text-editor';
+import RichTextEditorToolbar from './ui/rich-text-editor-toolbar';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TiptapUnderline from '@tiptap/extension-underline';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import TextAlign from '@tiptap/extension-text-align';
+import TiptapLink from '@tiptap/extension-link';
+import { Table } from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 
 
 const FONT_COLORS = [
@@ -75,7 +86,36 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isNewNote = noteId === 'new';
     
-    const contentSetRef = useRef(false);
+    const editor = useEditor({
+        extensions: [
+            StarterKit.configure({ codeBlock: false }),
+            TiptapUnderline,
+            TextAlign.configure({ types: ['heading', 'paragraph'] }),
+            TiptapLink.configure({ openOnClick: true, autolink: true, linkOnPaste: true }),
+            TaskList,
+            TaskItem.configure({ nested: true }),
+            Table.configure({ resizable: true }),
+            TableRow,
+            TableCell,
+            TableHeader,
+        ],
+        content: content,
+        onUpdate: ({ editor }) => {
+            setContent(editor.getHTML());
+            setIsDirty(true);
+        },
+        editorProps: {
+            attributes: {
+                class: `prose dark:prose-invert prose-sm sm:prose-base m-5 focus:outline-none flex-grow ${backgroundStyle ? `note-bg-${backgroundStyle}` : ''}`,
+            },
+        },
+    });
+
+    useEffect(() => {
+        if (editor && content && editor.getHTML() !== content) {
+            editor.commands.setContent(content);
+        }
+    }, [content, editor]);
 
     useEffect(() => {
         setIsClient(true);
@@ -99,10 +139,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 const noteToEdit = allNotes.find(note => note.id === noteId);
                 if (noteToEdit) {
                     setTitle(noteToEdit.title);
-                    if (!contentSetRef.current) {
-                        setContent(noteToEdit.content);
-                        contentSetRef.current = true;
-                    }
+                    setContent(noteToEdit.content);
                     setIsFavorite(noteToEdit.isFavorite || false);
                     setCategory(noteToEdit.category || '');
                     setAttachment(noteToEdit.attachment || null);
@@ -119,10 +156,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 const noteToEdit = notesFromDb.find(note => note.id === noteId);
                 if (noteToEdit) {
                     setTitle(noteToEdit.title);
-                    if (!contentSetRef.current) {
-                        setContent(noteToEdit.content);
-                        contentSetRef.current = true;
-                    }
+                    setContent(noteToEdit.content);
                     setIsFavorite(noteToEdit.isFavorite || false);
                     setCategory(noteToEdit.category || '');
                     setAttachment(noteToEdit.attachment || null);
@@ -146,7 +180,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             unsubUserData();
         };
 
-    }, [isNewNote, noteId, router, toast, profile, t]);
+    }, [isNewNote, noteId, router, toast, profile, t, allNotes]);
 
 
      useEffect(() => {
@@ -221,7 +255,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     }
     
     const handleOpenSaveDialog = () => {
-         if (!content.trim()) {
+         if (!editor?.getText().trim()) {
             toast({
                 title: "Cannot save empty note",
                 description: "Please add some content before saving.",
@@ -434,70 +468,28 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                 </Button>
+                 <Input
+                    id="note-title"
+                    value={title}
+                    onChange={(e) => {setTitle(e.target.value); setIsDirty(true);}}
+                    placeholder="Untitled Note"
+                    className="flex-1 mx-4 text-lg font-bold border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-center"
+                />
                 <div className="flex items-center gap-2">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                             <Button variant="ghost" size="icon">
-                                <Notebook />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('none'); setIsDirty(true);}}>None</DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('lines'); setIsDirty(true);}}>Lines</DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('dots'); setIsDirty(true);}}>Dots</DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => {setBackgroundStyle('grid'); setIsDirty(true);}}>Grid</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Share2 />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => handleExport('png')}>
-                                <ImageIcon className="mr-2 h-4 w-4" />
-                                <span>Export as Image</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleExport('txt')}>
-                                <FileText className="mr-2 h-4 w-4" />
-                                <span>Export as TXT</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleExport('pdf')}>
-                                <Download className="mr-2 h-4 w-4" />
-                                <span>Export as PDF</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button variant="ghost" size="icon" onClick={handleLockToggle} className={cn(isLocked && "bg-primary/10 text-primary")}>
-                       {isLocked ? <Lock /> : <Unlock/>}
-                    </Button>
                     <Button variant="ghost" size="icon" onClick={handleOpenSaveDialog}>
                         <Save />
                     </Button>
                 </div>
             </header>
             
-            <div className={cn("bg-card p-4 rounded-t-xl flex-grow flex flex-col gap-4", backgroundStyle && `note-bg-${backgroundStyle}`)}>
-                
-                {renderAttachment()}
+            <div className={cn("bg-card flex-grow flex flex-col gap-4 overflow-y-auto")}>
+                 <EditorContent editor={editor} className="flex-grow flex flex-col"/>
+            </div>
 
-                 <RichTextEditor
-                    value={content}
-                    onChange={(newContent) => {
-                        setContent(newContent);
-                        setIsDirty(true);
-                    }}
-                    className={cn(backgroundStyle && `note-bg-${backgroundStyle}`)}
-                />
-                <div className="flex items-center gap-2 pt-2 border-t border-border">
-                    <Button variant="ghost" size="icon" onMouseDown={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}>
-                        <Paperclip />
-                    </Button>
-                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-                    <Button variant="ghost" size="icon" onClick={() => showComingSoonToast()}><Smile /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={handleSoftDelete}><Trash2 /></Button>
-                </div>
+            {/* Bottom Toolbar */}
+            <div className="flex-shrink-0 border-t bg-background p-1">
+               <RichTextEditorToolbar editor={editor} />
+                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
             </div>
 
             <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
@@ -505,14 +497,14 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     <DialogHeader>
                         <DialogTitle>Save Note</DialogTitle>
                         <DialogDescription>
-                            Add a title and category to organize your note.
+                            Confirm details before saving your note.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="note-title">Title</Label>
+                         <div className="space-y-2">
+                            <Label htmlFor="note-title-final">Title</Label>
                             <Input
-                                id="note-title"
+                                id="note-title-final"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Untitled Note"
@@ -629,4 +621,5 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         </div>
     );
 }
+
 
