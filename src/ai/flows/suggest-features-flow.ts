@@ -52,8 +52,8 @@ Here are the current features of the app:
 
 Based on these existing features, suggest 3-5 new, creative, and useful features that would enhance the app and make it more valuable to users.
 For each suggestion, provide a title, a brief description, and a suitable icon name from the lucide-react library.
-Ensure the suggestions are distinct from the existing features and offer new functionality.
-Focus on ideas that blend productivity, utility, and modern technology (like AI).
+Ensure the suggestions are distinct and innovative, offering functionality not already present.
+Focus on ideas that blend productivity, utility, and modern technology (like AI). DO NOT suggest features that are already on the "What's New" or "Updates" page.
 `,
 });
 

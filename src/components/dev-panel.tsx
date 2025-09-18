@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { ShieldAlert, Trash2, Code, KeyRound, Lock, Eye, EyeOff, Timer, NotebookText, FileText, ServerCog, Send, Wrench, Info, Shield, BellOff, Newspaper, User, MessageSquare, ArrowLeft, Crown, Plus, ToggleLeft, Flag, FileSymlink } from 'lucide-react';
+import { ShieldAlert, Trash2, Code, KeyRound, Lock, Eye, EyeOff, Timer, NotebookText, FileText, ServerCog, Send, Wrench, Info, Shield, BellOff, Newspaper, User, MessageSquare, ArrowLeft, Crown, Plus, ToggleLeft, Flag, FileSymlink, HelpCircle } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
@@ -694,6 +694,10 @@ export function DevPanel() {
                                 <Label>Help & How-to-Use Pages</Label>
                                 <Button onClick={() => router.push('/dev/how-to-use')}>Manage</Button>
                             </div>
+                            <div className="flex justify-between items-center bg-secondary p-3 rounded-lg">
+                                <Label>FAQ Content</Label>
+                                <Button onClick={() => router.push('/dev/help')}>Manage</Button>
+                            </div>
                              <div className="flex justify-between items-center bg-secondary p-3 rounded-lg">
                                 <Label>Updates Page</Label>
                                 <Button onClick={() => router.push('/dev/updates')}>Manage</Button>
@@ -803,5 +807,3 @@ export function DevPanel() {
         </div>
     );
 }
-
-    

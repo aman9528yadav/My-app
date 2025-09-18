@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { db, rtdb } from '@/lib/firebase';
@@ -728,7 +727,7 @@ export async function getUserData(email: string | null): Promise<UserData> {
  * @param email - The user's email. Does nothing if null.
  * @param data - The data object to merge with existing data.
  */
-export async function updateUserData(email: string | null, data: Partial<UserData>) {
+export async function updateUserData(email: string, data: Partial<UserData>) {
     if (!email) return;
     try {
         const userRef = ref(rtdb, `users/${sanitizeEmail(email)}`);

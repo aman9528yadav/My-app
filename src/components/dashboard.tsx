@@ -53,7 +53,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { format, intervalToDuration, isPast, parseISO } from "date-fns";
 import { listenToNextUpdateInfo, NextUpdateInfo, listenToUpdatesFromRtdb, UpdateItem, listenToDashboardWelcomeMessage, setDashboardWelcomeMessage, BetaWelcomeMessage, listenToBetaWelcomeMessage, listenToComingSoonItems, ComingSoonItem, defaultComingSoonItems, HowToUseFeature, listenToHowToUseFeaturesFromRtdb, updateUserData, UserData, listenToUserData } from '@/services/firestore';
-import { getStreakData, recordVisit, StreakData } from "@/lib/streak";
+import { recordVisit, StreakData } from "@/lib/streak";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 
@@ -111,12 +111,14 @@ export function Dashboard() {
     }
     
     recordVisit(userEmail);
-    getStreakData(userEmail).then(setStreakData);
 
     const unsubUserData = listenToUserData(userEmail, (userData) => {
       if (userData) {
         const processedStats = processUserDataForStats(userData, userEmail);
         setStats(processedStats as any);
+         if (userData.streakData) {
+            setStreakData(userData.streakData);
+        }
         if (userData.settings?.quickAccessOrder) {
           setQuickAccessItems(reorderItems(userData.settings.quickAccessOrder, defaultQuickAccessItems));
         } else if (!userEmail) {
@@ -209,7 +211,7 @@ export function Dashboard() {
     <div className="text-foreground max-w-sm mx-auto">
       {/* STAT CARDS - HORIZONTAL SCROLL */}
       <div className="mb-5">
-        <ScrollArea className="w-full whitespace-nowrap">
+        <ScrollArea className="w-full whitespace-nowrap always-visible-scrollbar">
             <div className="flex gap-3 pb-2">
             {statsData.map((s) => (
                 <div key={s.key} className="min-w-[120px] flex-shrink-0 p-3 rounded-2xl bg-card shadow-sm border">
@@ -296,7 +298,7 @@ export function Dashboard() {
           <h3 className="text-sm font-semibold text-primary">Coming Soon</h3>
           <span className="text-xs text-muted-foreground">Preview</span>
         </div>
-        <ScrollArea className="w-full whitespace-nowrap">
+        <ScrollArea className="w-full whitespace-nowrap always-visible-scrollbar">
             <div className="flex gap-3 pb-2">
             {comingSoonItems.map((item) => (
                 <ComingCard key={item.id} {...item} />
@@ -526,5 +528,9 @@ function InfoItem({ icon, title, subtitle, href }: { icon: React.ReactNode, titl
     }
     return <div>{content}</div>;
 }
+
+    
+
+    
 
     

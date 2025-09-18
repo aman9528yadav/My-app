@@ -91,7 +91,7 @@ const AnimatedStat = ({ value }: { value: string }) => {
 };
 
 
-export function About() {
+export function About({ featureSuggestions: initialFeatureSuggestions }: { featureSuggestions: SuggestFeaturesOutput | null }) {
   const router = useRouter();
   const [appInfo, setAppInfo] = useState<AppInfo>(defaultAppInfo);
   const [releasePlan, setReleasePlan] = useState<ReleasePlanItem[]>(defaultReleasePlan);
@@ -99,7 +99,7 @@ export function About() {
   const [aboutStats, setAboutStats] = useState<AboutStats>(defaultAboutStats);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [showConfetti, setShowConfetti] = useState(false);
-  const [featureSuggestions, setFeatureSuggestions] = useState<SuggestFeaturesOutput | null>(null);
+  const [featureSuggestions, setFeatureSuggestions] = useState<SuggestFeaturesOutput | null>(initialFeatureSuggestions);
   const [isSuggesting, setIsSuggesting] = useState(false);
   
   const toggleExpand = (id: string) => {

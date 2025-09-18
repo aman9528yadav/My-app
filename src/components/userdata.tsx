@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/language-context";
 import { listenToUserData, UserData, listenToPremiumInfoContent, PremiumInfoContent } from "@/services/firestore";
 import { getStats } from "@/lib/stats";
-import { getStreakData } from "@/lib/streak";
+import { getStreakData, StreakData } from "@/lib/streak";
 import { format } from "date-fns";
 import { Progress } from "./ui/progress";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,8 @@ const roleConfig = {
 
 export function UserData() {
     const [profileData, setProfileData] = useState<UserData | null>(null);
-    const [stats, setStats] = useState({ conversions: 0, notes: 0, daysActive: 0, totalOps: 0 });
+    const [stats, setStats] = useState({ conversions: 0, notes: 0, totalHistory: 0, totalOps: 0 });
+    const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, bestStreak: 0, daysNotOpened: 0});
     const [userRole, setUserRole] = useState<UserRole>('Member');
     const [achievements, setAchievements] = useState<string[]>([]);
     const [isPremiumInfoOpen, setIsPremiumInfoOpen] = useState(false);
@@ -56,19 +57,20 @@ export function UserData() {
 
         const updateUserRoleAndStats = async (email: string, userData: UserData) => {
             const userStats = await getStats(email);
-            const streakData = await getStreakData(email);
-
+             const streak = await getStreakData(email);
+            setStreakData(streak);
+            
             setStats({
                 conversions: userStats.totalConversions,
                 notes: userStats.savedNotes,
-                daysActive: streakData.bestStreak,
+                totalHistory: userStats.totalHistory,
                 totalOps: userStats.totalOps,
             });
             
             let role: UserRole = 'Member';
             if (email === DEVELOPER_EMAIL) {
                 role = 'Owner';
-            } else if (userStats.totalOps >= PREMIUM_MEMBER_THRESHOLD || streakData.bestStreak >= 15) {
+            } else if (userStats.totalOps >= PREMIUM_MEMBER_THRESHOLD || streak.bestStreak >= 15) {
                 role = 'Premium Member';
             }
             setUserRole(role);
@@ -76,8 +78,8 @@ export function UserData() {
             const newAchievements: string[] = [];
             if (auth.currentUser?.emailVerified) newAchievements.push("⭐ Verified User");
             if (userStats.totalConversions >= 100) newAchievements.push("🏆 100+ Conversions");
-            if (streakData.bestStreak >= 30) newAchievements.push("📅 30 Days Active");
-            if (streakData.bestStreak >= 7) newAchievements.push("🔥 7 Day Streak");
+            if (streak.bestStreak >= 30) newAchievements.push("📅 30 Days Active");
+            if (streak.bestStreak >= 7) newAchievements.push("🔥 7 Day Streak");
             if (role === 'Premium Member' || role === 'Owner') newAchievements.push("👑 Premium Member");
             setAchievements(newAchievements);
         };
@@ -85,7 +87,9 @@ export function UserData() {
 
         const unsubscribe = listenToUserData(userEmail, (data) => {
             setProfileData(data);
-            updateUserRoleAndStats(userEmail, data);
+            if(data) {
+                updateUserRoleAndStats(userEmail, data);
+            }
         });
         
         const unsubPremium = listenToPremiumInfoContent(setPremiumInfoContent);
@@ -188,13 +192,13 @@ export function UserData() {
                             <Button asChild className="flex gap-2" variant="secondary"><Link href="/settings"><Globe size={16} /> Region</Link></Button>
                             <Button asChild className="flex gap-2" variant="secondary"><Link href="/profile/edit"><Shield size={16} /> Security</Link></Button>
                             <Button asChild className="flex gap-2" variant="secondary"><Link href="/settings/theme"><Palette size={16} /> Theme</Link></Button>
-                            <Button asChild className="flex gap-2" variant="secondary"><Link href="/history"><History size={16} /> History</Link></Button>
+                            <Button asChild className="flex gap-2" variant="secondary"><Link href="/history"><History size={16} /> {stats.totalHistory} items</Link></Button>
                         </div>
                         
                         <div className="mt-6 grid grid-cols-3 gap-4 text-center">
                             <div><p className="text-lg font-bold">{stats.conversions}</p><p className="text-xs text-gray-500">Conversions</p></div>
                             <div><p className="text-lg font-bold">{stats.notes}</p><p className="text-xs text-gray-500">Notes</p></div>
-                            <div><p className="text-lg font-bold">{stats.daysActive}</p><p className="text-xs text-gray-500">Days Active</p></div>
+                             <div><p className="text-lg font-bold">{streakData.bestStreak}</p><p className="text-xs text-gray-500">Best Streak</p></div>
                         </div>
 
                         {userRole === 'Member' && (
@@ -259,3 +263,5 @@ export function UserData() {
         </div>
     );
 }
+
+    

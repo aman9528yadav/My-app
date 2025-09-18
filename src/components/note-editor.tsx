@@ -2,11 +2,15 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+<<<<<<< HEAD
 import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, Check, MoreVertical, Calendar as CalendarIcon, Bell, Copy, BookCopy, Eraser } from 'lucide-react';
+=======
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar as CalendarIcon, Bell, Plus, Minus, Heading3 } from 'lucide-react';
+>>>>>>> origin/main
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -16,8 +20,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -27,8 +31,28 @@ import { cn } from '@/lib/utils';
 import { Label } from './ui/label';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import RichTextEditor from './ui/rich-text-editor';
-
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TiptapUnderline from '@tiptap/extension-underline';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import TextAlign from '@tiptap/extension-text-align';
+import TiptapLink from '@tiptap/extension-link';
+import { Table } from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import RichTextEditorToolbar from './ui/rich-text-editor-toolbar';
+import { ScrollArea, ScrollBar } from './ui/scroll-area';
+import { Toggle } from './ui/toggle';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Calendar as CalendarPicker } from './ui/calendar';
+import { addNotification } from '@/lib/notifications';
+import { format, parseISO, setHours, setMinutes, setSeconds } from 'date-fns';
+import { CharacterCount } from '@tiptap/extension-character-count';
+import Color from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
+import TiptapHighlight from '@tiptap/extension-highlight';
 
 const FONT_COLORS = [
   { name: 'Default', color: 'inherit' },
@@ -68,6 +92,13 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     const [showPremiumLockDialog, setShowPremiumLockDialog] = useState(false);
     const [backgroundStyle, setBackgroundStyle] = useState<'none' | 'lines' | 'dots' | 'grid'>('none');
     const [showSaveDialog, setShowSaveDialog] = useState(false);
+    const [dueDate, setDueDate] = useState<Date | null>(null);
+    const [reminderAt, setReminderAt] = useState<Date | null>(null);
+    const [reminderTime, setReminderTime] = useState({ hour: '09', minute: '00' });
+    const [isWebClip, setIsWebClip] = useState(false);
+    const [clipURL, setClipURL] = useState('');
+    const [isDueDateOpen, setIsDueDateOpen] = useState(false);
+    const [isReminderOpen, setIsReminderOpen] = useState(false);
 
 
     const router = useRouter();
@@ -75,7 +106,42 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isNewNote = noteId === 'new';
     
-    const contentSetRef = useRef(false);
+    const editor = useEditor({
+        extensions: [
+            StarterKit.configure({ codeBlock: false }),
+            CharacterCount,
+            TiptapUnderline,
+            TextAlign.configure({ types: ['heading', 'paragraph'] }),
+            TiptapLink.configure({ openOnClick: true, autolink: true, linkOnPaste: true }),
+            TaskList,
+            TaskItem.configure({ nested: true }),
+            Table.configure({ resizable: true }),
+            TableRow,
+            TableCell,
+            TableHeader,
+            TextStyle,
+            Color,
+            TiptapHighlight.configure({ multicolor: true }),
+        ],
+        content: content,
+        onUpdate: ({ editor }) => {
+            setContent(editor.getHTML());
+            setIsDirty(true);
+        },
+        editorProps: {
+            attributes: {
+                class: `prose dark:prose-invert prose-sm sm:prose-base m-5 focus:outline-none flex-grow ${backgroundStyle ? `note-bg-${backgroundStyle}` : ''}`,
+            },
+        },
+    });
+    
+    const characterCount = editor?.storage.characterCount.characters() || 0;
+
+    useEffect(() => {
+        if (editor && content && editor.getHTML() !== content) {
+            editor.commands.setContent(content);
+        }
+    }, [content, editor]);
 
     useEffect(() => {
         setIsClient(true);
@@ -90,6 +156,16 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         }
 
     }, []);
+    
+    const handleSetReminder = () => {
+        if (!reminderAt) return;
+        let dateWithTime = setHours(reminderAt, parseInt(reminderTime.hour, 10));
+        dateWithTime = setMinutes(dateWithTime, parseInt(reminderTime.minute, 10));
+        dateWithTime = setSeconds(dateWithTime, 0);
+        setReminderAt(dateWithTime);
+        setIsReminderOpen(false);
+    };
+
 
     useEffect(() => {
         const userEmail = profile?.email || null;
@@ -99,15 +175,23 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 const noteToEdit = allNotes.find(note => note.id === noteId);
                 if (noteToEdit) {
                     setTitle(noteToEdit.title);
-                    if (!contentSetRef.current) {
-                        setContent(noteToEdit.content);
-                        contentSetRef.current = true;
-                    }
+                    setContent(noteToEdit.content);
                     setIsFavorite(noteToEdit.isFavorite || false);
                     setCategory(noteToEdit.category || '');
                     setAttachment(noteToEdit.attachment || null);
                     setIsLocked(noteToEdit.isLocked || false);
                     setBackgroundStyle(noteToEdit.backgroundStyle || 'none');
+                    if (noteToEdit.dueDate) setDueDate(parseISO(noteToEdit.dueDate));
+                    if (noteToEdit.reminderAt) {
+                        const reminderDate = parseISO(noteToEdit.reminderAt);
+                        setReminderAt(reminderDate);
+                        setReminderTime({
+                            hour: format(reminderDate, 'HH'),
+                            minute: format(reminderDate, 'mm')
+                        });
+                    }
+                    setIsWebClip(noteToEdit.isWebClip || false);
+                    setClipURL(noteToEdit.clipURL || '');
                 }
             }
             return;
@@ -119,15 +203,23 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 const noteToEdit = notesFromDb.find(note => note.id === noteId);
                 if (noteToEdit) {
                     setTitle(noteToEdit.title);
-                    if (!contentSetRef.current) {
-                        setContent(noteToEdit.content);
-                        contentSetRef.current = true;
-                    }
+                    setContent(noteToEdit.content);
                     setIsFavorite(noteToEdit.isFavorite || false);
                     setCategory(noteToEdit.category || '');
                     setAttachment(noteToEdit.attachment || null);
                     setIsLocked(noteToEdit.isLocked || false);
                     setBackgroundStyle(noteToEdit.backgroundStyle || 'none');
+                     if (noteToEdit.dueDate) setDueDate(parseISO(noteToEdit.dueDate));
+                    if (noteToEdit.reminderAt) {
+                        const reminderDate = parseISO(noteToEdit.reminderAt);
+                        setReminderAt(reminderDate);
+                        setReminderTime({
+                            hour: format(reminderDate, 'HH'),
+                            minute: format(reminderDate, 'mm')
+                        });
+                    }
+                    setIsWebClip(noteToEdit.isWebClip || false);
+                    setClipURL(noteToEdit.clipURL || '');
                 } else {
                     toast({ title: t('noteEditor.toast.notFound'), variant: "destructive" });
                     router.push('/notes');
@@ -146,7 +238,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             unsubUserData();
         };
 
-    }, [isNewNote, noteId, router, toast, profile, t]);
+    }, [isNewNote, noteId, router, toast, profile, t, allNotes]);
 
 
      useEffect(() => {
@@ -216,12 +308,42 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         setIsDirty(true);
     }
     
-    const showComingSoonToast = () => {
-        toast({ title: t('noteEditor.toast.comingSoon.title'), description: t('noteEditor.toast.comingSoon.description')});
-    }
+    const applyTemplate = (template: 'meeting') => {
+        if (!editor) return;
+        
+        let templateContent = '';
+        if (template === 'meeting') {
+            const today = format(new Date(), 'PPP');
+            templateContent = `
+                <h2>Meeting Agenda</h2>
+                <p><strong>Date:</strong> ${today}</p>
+                <p><strong>Attendees:</strong> </p>
+                <p><strong>Timekeeper:</strong> </p>
+                <p><strong>Note Taker:</strong> </p>
+                <h3>Topics:</h3>
+                <ul>
+                    <li><p>Topic 1</p></li>
+                    <li><p>Topic 2</p></li>
+                </ul>
+                <h3>Action Items:</h3>
+                <ul data-type="taskList">
+                    <li><label><input type="checkbox"><span></span></label><div><p></p></div></li>
+                </ul>
+                <h3>Notes:</h3>
+                <p></p>
+            `;
+        }
+        
+        editor.commands.setContent(templateContent, true);
+        toast({ title: "Template Applied!" });
+    };
     
     const handleOpenSaveDialog = () => {
+<<<<<<< HEAD
          if (!content.trim() && !title.trim()) {
+=======
+         if (!editor?.getText().trim()) {
+>>>>>>> origin/main
             toast({
                 title: "Cannot save empty note",
                 description: "Please add some content or a title before saving.",
@@ -238,10 +360,22 @@ export function NoteEditor({ noteId }: { noteId: string }) {
 
         const notes: Note[] = [...allNotes];
         const now = new Date().toISOString();
+        const noteIdToSave = isNewNote ? uuidv4() : noteId;
+
+        if (reminderAt) {
+            addNotification({
+                id: noteIdToSave, // Use note ID for the notification
+                title: `Reminder: ${finalTitle}`,
+                description: editor?.getText().substring(0, 50) || 'Check your note.',
+                icon: 'info',
+                triggerAt: reminderAt.getTime(),
+            });
+            toast({ title: "Reminder Set!", description: `You'll be notified at ${format(reminderAt, 'Pp')}`});
+        }
 
         if (isNewNote) {
             const newNote: Note = {
-                id: uuidv4(),
+                id: noteIdToSave,
                 title: finalTitle,
                 content: content,
                 isFavorite: isFavorite || false,
@@ -252,6 +386,10 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 deletedAt: null,
                 isLocked,
                 backgroundStyle,
+                dueDate: dueDate?.toISOString() || null,
+                reminderAt: reminderAt?.toISOString() || null,
+                isWebClip: false,
+                clipURL: '',
             };
             notes.push(newNote);
         } else {
@@ -267,6 +405,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     updatedAt: now,
                     isLocked,
                     backgroundStyle,
+                    dueDate: dueDate?.toISOString() || null,
+                    reminderAt: reminderAt?.toISOString() || null,
                 };
             }
         }
@@ -426,6 +566,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     }
 
     return (
+<<<<<<< HEAD
         <div className="w-full max-w-md mx-auto flex flex-col h-screen bg-background">
             <header className="flex items-center justify-between p-2 flex-shrink-0 z-10 bg-background/80 backdrop-blur-sm">
                 <Button variant="ghost" size="icon" onClick={handleBack}>
@@ -437,11 +578,28 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     <Button variant="ghost" size="icon" onClick={handleOpenSaveDialog}><Save /></Button>
                     <DropdownMenu>
                          <DropdownMenuTrigger asChild>
+=======
+        <div className="w-full max-w-md mx-auto flex flex-col h-screen bg-card text-card-foreground">
+            <header className="flex items-center justify-between p-4 flex-shrink-0">
+                <Button variant="ghost" size="icon" onClick={() => handleOpenSaveDialog()}>
+                    <Check />
+                </Button>
+                <div className='flex items-center gap-2'>
+                    <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().undo()}>
+                        <Undo />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()}>
+                        <Redo />
+                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+>>>>>>> origin/main
                             <Button variant="ghost" size="icon">
                                 <MoreVertical />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
+<<<<<<< HEAD
                             <DropdownMenuItem onSelect={handleLockToggle}><Lock className="mr-2 h-4 w-4"/> {isLocked ? 'Unlock Note' : 'Lock Note'}</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}><Paperclip className="mr-2 h-4 w-4"/> Attach File</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => setShowSaveDialog(true)}><Tag className="mr-2 h-4 w-4"/> Change Category</DropdownMenuItem>
@@ -478,7 +636,99 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                         }}
                         className={cn("bg-transparent", backgroundStyle && `note-bg-${backgroundStyle}`)}
                     />
+=======
+                            <DropdownMenuItem onSelect={handleSoftDelete}><Trash2 className="mr-2 h-4 w-4"/> Delete Note</DropdownMenuItem>
+                             <DropdownMenuItem onSelect={handleLockToggle}><Lock className="mr-2 h-4 w-4"/> {isLocked ? 'Unlock Note' : 'Lock Note'}</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => handleExport('png')}><ImageIcon className="mr-2 h-4 w-4" /> Export as Image</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleExport('txt')}><FileText className="mr-2 h-4 w-4" /> Export as TXT</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleExport('pdf')}><Download className="mr-2 h-4 w-4" /> Export as PDF</DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onSelect={() => applyTemplate('meeting')}><BookCopy className="mr-2 h-4 w-4" /> Use Template</DropdownMenuItem>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <div className="flex flex-col w-full">
+                                    <Label className="text-xs text-muted-foreground">Due Date</Label>
+                                    <Popover open={isDueDateOpen} onOpenChange={setIsDueDateOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {dueDate ? format(dueDate, 'PPP') : 'Set Date'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={setDueDate} />
+                                            <Button onClick={() => setIsDueDateOpen(false)} className="w-full mt-2">Set</Button>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <div className="flex flex-col w-full">
+                                    <Label className="text-xs text-muted-foreground">Reminder</Label>
+                                    <Popover open={isReminderOpen} onOpenChange={setIsReminderOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
+                                                <Bell className="mr-2 h-4 w-4" />
+                                                {reminderAt ? format(reminderAt, 'Pp') : 'Set Reminder'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                            <CalendarPicker
+                                                mode="single"
+                                                selected={reminderAt ?? undefined}
+                                                onSelect={(date) => {
+                                                    if (date) {
+                                                        const currentReminder = reminderAt || new Date();
+                                                        let newDate = setHours(date, currentReminder.getHours());
+                                                        newDate = setMinutes(newDate, currentReminder.getMinutes());
+                                                        newDate = setSeconds(newDate, 0);
+                                                        setReminderAt(newDate);
+                                                    } else {
+                                                        setReminderAt(null);
+                                                    }
+                                                }}
+                                            />
+                                            <div className="flex items-center gap-2 p-2 border-t">
+                                                <Input
+                                                    type="time"
+                                                    value={reminderTime.hour + ':' + reminderTime.minute}
+                                                    onChange={(e) => {
+                                                        const [hour, minute] = e.target.value.split(':');
+                                                        setReminderTime({ hour, minute });
+                                                    }}
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                            <Button onClick={handleSetReminder} className="w-full mt-2">Set</Button>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
+            </header>
+
+            <div className="flex-grow flex flex-col overflow-hidden">
+                <div className='px-4 pb-2 relative'>
+                     <Input
+                        id="note-title"
+                        value={title}
+                        onChange={(e) => {setTitle(e.target.value); setIsDirty(true);}}
+                        placeholder="Title"
+                        className="text-2xl font-bold border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
+                    />
+                    <div className='absolute right-4 bottom-2 text-xs text-muted-foreground'>{characterCount}</div>
+>>>>>>> origin/main
+                </div>
+                 <EditorContent editor={editor} className="flex-grow flex flex-col overflow-y-auto"/>
+            </div>
+
+
+            {/* Bottom Toolbar */}
+             <div className="flex-shrink-0 border-t bg-background p-1">
+               <RichTextEditorToolbar editor={editor} />
+                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
             </div>
             
             {/* Bottom Toolbar */}
@@ -511,14 +761,14 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     <DialogHeader>
                         <DialogTitle>Save Note</DialogTitle>
                         <DialogDescription>
-                            Add a title and category to organize your note.
+                            Confirm details before saving your note.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="note-title">Title</Label>
+                         <div className="space-y-2">
+                            <Label htmlFor="note-title-final">Title</Label>
                             <Input
-                                id="note-title"
+                                id="note-title-final"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Untitled Note"
@@ -612,7 +862,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     </div>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setShowSetPasswordDialog(false)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleSetInitialPassword}>Set Password & Lock</AlertDialogAction>
+                        <AlertDialogAction onClick={handleSetInitialPassword}>Set Password &amp; Lock</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -635,4 +885,17 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         </div>
     );
 }
+
+
+
+
+
+    
+
+
+
+    
+
+    
+
 
