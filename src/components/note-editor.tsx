@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useLanguage } from '@/context/language-context';
 import { listenToUserNotes, updateUserNotes, listenToUserData, UserData, getGuestKey, updateUserData } from '@/services/firestore';
 import { cn } from '@/lib/utils';
@@ -66,6 +67,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
     const [isExportLocked, setIsExportLocked] = useState(true);
     const [showPremiumLockDialog, setShowPremiumLockDialog] = useState(false);
     const [backgroundStyle, setBackgroundStyle] = useState<'none' | 'lines' | 'dots' | 'grid'>('none');
+    const [showSaveDialog, setShowSaveDialog] = useState(false);
 
 
     const router = useRouter();
@@ -218,16 +220,21 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         toast({ title: t('noteEditor.toast.comingSoon.title'), description: t('noteEditor.toast.comingSoon.description')});
     }
     
-
-    const handleSave = () => {
-         if (!title.trim() && !content.trim()) {
+    const handleOpenSaveDialog = () => {
+         if (!content.trim()) {
             toast({
-                title: t('noteEditor.toast.emptyNote.title'),
-                description: t('noteEditor.toast.emptyNote.description'),
+                title: "Cannot save empty note",
+                description: "Please add some content before saving.",
                 variant: "destructive"
             });
             return;
         }
+        setShowSaveDialog(true);
+    }
+
+
+    const handleSave = () => {
+        const finalTitle = title.trim() || 'Untitled Note';
 
         const notes: Note[] = [...allNotes];
         const now = new Date().toISOString();
@@ -235,7 +242,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         if (isNewNote) {
             const newNote: Note = {
                 id: uuidv4(),
-                title,
+                title: finalTitle,
                 content: content,
                 isFavorite: isFavorite || false,
                 category: category || '',
@@ -252,7 +259,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             if (noteIndex > -1) {
                 notes[noteIndex] = {
                     ...notes[noteIndex],
-                    title,
+                    title: finalTitle,
                     content: content,
                     isFavorite: isFavorite || false,
                     category: category || '',
@@ -275,6 +282,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             title: t('noteEditor.toast.saved.title'),
             description: t('noteEditor.toast.saved.description'),
         });
+        setShowSaveDialog(false);
         router.push('/notes');
     };
     
@@ -341,7 +349,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         credit.style.fontSize = '12px';
         credit.style.color = '#888';
         credit.style.marginTop = '20px';
-        exportContainer.appendChild(credit);
+        exportContainer.appendChild(exportContainer);
 
         document.body.appendChild(exportContainer);
 
@@ -412,6 +420,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         )
     }
 
+    const existingCategories = [...new Set(allNotes.map(n => n.category).filter(Boolean))];
+
 
     if (!isClient && !isNewNote) {
         return null;
@@ -462,13 +472,13 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     <Button variant="ghost" size="icon" onClick={handleLockToggle} className={cn(isLocked && "bg-primary/10 text-primary")}>
                        {isLocked ? <Lock /> : <Unlock/>}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleSave()}>
+                    <Button variant="ghost" size="icon" onClick={handleOpenSaveDialog}>
                         <Save />
                     </Button>
                 </div>
             </header>
             
-            <div className={cn("bg-card p-4 rounded-t-xl flex-grow flex flex-col gap-4 mt-4", backgroundStyle && `note-bg-${backgroundStyle}`)}>
+            <div className={cn("bg-card p-4 rounded-t-xl flex-grow flex flex-col gap-4", backgroundStyle && `note-bg-${backgroundStyle}`)}>
                 
                 {renderAttachment()}
 
@@ -489,6 +499,68 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={handleSoftDelete}><Trash2 /></Button>
                 </div>
             </div>
+
+            <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Save Note</DialogTitle>
+                        <DialogDescription>
+                            Add a title and category to organize your note.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="note-title">Title</Label>
+                            <Input
+                                id="note-title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="Untitled Note"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="note-category">Category</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="note-category"
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    placeholder="e.g., Work, Personal"
+                                />
+                                {existingCategories.length > 0 && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="icon"><Tag/></Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {existingCategories.map(cat => (
+                                                <DropdownMenuItem key={cat} onSelect={() => setCategory(cat)}>
+                                                    {cat}
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                             <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setIsFavorite(!isFavorite)}
+                                className={cn(isFavorite && 'text-yellow-400')}
+                            >
+                                <Star className={cn(isFavorite && 'fill-yellow-400')}/>
+                            </Button>
+                            <Label htmlFor="favorite-switch">Mark as favorite</Label>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+                        <Button onClick={handleSave}>Save Note</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
              <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
                 <AlertDialogContent>
@@ -557,3 +629,4 @@ export function NoteEditor({ noteId }: { noteId: string }) {
         </div>
     );
 }
+
