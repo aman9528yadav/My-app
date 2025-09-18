@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/language-context";
 import { listenToUserData, UserData } from "@/services/firestore";
 import { getStats } from "@/lib/stats";
-import { getStreakData, StreakData } from "@/lib/streak";
+import { StreakData } from "@/lib/streak";
 import { format } from "date-fns";
 
 type UserRole = 'Member' | 'Premium Member' | 'Owner';
@@ -26,7 +26,7 @@ const defaultSkills = ["React", "Tailwind CSS", "UI/UX Design", "Content Writing
 
 export function Profile() {
     const [profileData, setProfileData] = useState<UserData | null>(null);
-    const [stats, setStats] = useState({ conversions: 0, notes: 0, totalHistory: 0 });
+    const [stats, setStats] = useState({ conversions: 0, notes: 0, totalHistory: 0, totalOps: 0 });
     const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, bestStreak: 0, daysNotOpened: 0});
     const [userRole, setUserRole] = useState<UserRole>('Member');
     const [achievements, setAchievements] = useState<string[]>([]);
@@ -42,15 +42,16 @@ export function Profile() {
             return;
         }
 
-        const updateUserRoleAndStats = async (email: string, userData: UserData) => {
-            const userStats = await getStats(email);
-            const streak = await getStreakData(email);
+        const updateUserRoleAndStats = (email: string, userData: UserData) => {
+            const userStats = processUserDataForStats(userData, email);
+            const streak = userData.streakData || { currentStreak: 0, bestStreak: 0, daysNotOpened: 0};
             setStreakData(streak);
 
             setStats({
                 conversions: userStats.totalConversions,
                 notes: userStats.savedNotes,
                 totalHistory: userStats.totalHistory,
+                totalOps: userStats.totalOps
             });
 
             if (email === DEVELOPER_EMAIL) {

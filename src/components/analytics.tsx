@@ -42,7 +42,7 @@ import { useLanguage } from "@/context/language-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
-import { getStreakData, StreakData } from "@/lib/streak";
+import { StreakData } from "@/lib/streak";
 import { cn } from "@/lib/utils";
 import { listenToUserData, UserData } from "@/services/firestore";
 import { motion, AnimatePresence } from "framer-motion";
@@ -137,11 +137,7 @@ export function Analytics() {
             if (userData) {
                 const processed = processUserDataForStats(userData, userEmail);
                 setStats(processed as any);
-                
-                if (userEmail) {
-                    getStreakData(userEmail).then(setStreakData);
-                }
-                
+                setStreakData(userData.streakData || { currentStreak: 0, bestStreak: 0, daysNotOpened: 0 });
                 loadLastActivities(userData);
             }
         });
