@@ -573,7 +573,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={(date) => { setDueDate(date); setIsDueDateOpen(false); }} />
+                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={(date) => setDueDate(date)} />
+                                            <Button onClick={() => setIsDueDateOpen(false)} className="w-full mt-2">Set</Button>
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -589,7 +590,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={(date) => { setReminderAt(date); setIsReminderOpen(false); }} />
+                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={(date) => setReminderAt(date)} />
+                                            <Button onClick={() => setIsReminderOpen(false)} className="w-full mt-2">Set</Button>
                                         </PopoverContent>
                                     </Popover>
                                  </div>
