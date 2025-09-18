@@ -565,7 +565,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                 <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Due Date</Label>
-                                    <Popover open={isDueDateOpen} onOpenChange={setIsDueDateOpen}>
+                                    <Popover>
                                         <PopoverTrigger asChild>
                                             <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
                                                 <Calendar className="mr-2 h-4 w-4" />
@@ -574,7 +574,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                         </PopoverTrigger>
                                         <PopoverContent>
                                             <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={setDueDate} />
-                                            <Button onClick={() => setIsDueDateOpen(false)} className="w-full mt-2">Set</Button>
+                                            <Button onClick={() => {}} className="w-full mt-2">Set</Button>
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -582,7 +582,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                  <div className="flex flex-col w-full">
                                     <Label className="text-xs text-muted-foreground">Reminder</Label>
-                                     <Popover open={isReminderOpen} onOpenChange={setIsReminderOpen}>
+                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button variant="ghost" size="sm" className="justify-start p-1 h-auto">
                                                 <Bell className="mr-2 h-4 w-4" />
@@ -591,7 +591,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                         </PopoverTrigger>
                                         <PopoverContent>
                                             <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={setReminderAt} />
-                                            <Button onClick={() => setIsReminderOpen(false)} className="w-full mt-2">Set</Button>
+                                            <Button onClick={() => {}} className="w-full mt-2">Set</Button>
                                         </PopoverContent>
                                     </Popover>
                                  </div>
