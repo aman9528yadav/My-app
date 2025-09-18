@@ -117,6 +117,9 @@ export function Dashboard() {
       if (userData) {
         const processedStats = processUserDataForStats(userData, userEmail);
         setStats(processedStats as any);
+         if (userData.streakData) {
+            setStreakData(userData.streakData);
+        }
         if (userData.settings?.quickAccessOrder) {
           setQuickAccessItems(reorderItems(userData.settings.quickAccessOrder, defaultQuickAccessItems));
         } else if (!userEmail) {
@@ -526,6 +529,8 @@ function InfoItem({ icon, title, subtitle, href }: { icon: React.ReactNode, titl
     }
     return <div>{content}</div>;
 }
+
+    
 
     
 
