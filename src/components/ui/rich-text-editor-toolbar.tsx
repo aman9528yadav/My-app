@@ -86,6 +86,9 @@ const RichTextEditorToolbar = ({ editor }: { editor: Editor | null }) => {
         <Toggle size="sm" pressed={editor.isActive("strike")} onPressedChange={() => editor.chain().focus().toggleStrike().run()}>
           <Strikethrough className="w-4 h-4" />
         </Toggle>
+        <Toggle size="sm" pressed={editor.isActive("highlight")} onPressedChange={() => editor.chain().focus().toggleHighlight().run()}>
+            <Highlighter className="w-4 h-4" />
+        </Toggle>
 
         <div className="h-6 border-l border-input mx-1" />
 

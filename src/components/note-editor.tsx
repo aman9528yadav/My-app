@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar, Bell, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Bold, Italic, List, Underline, Strikethrough, Link2, ListOrdered, Code2, Paperclip, Smile, Image as ImageIcon, X, Undo, Redo, Palette, CaseSensitive, Pilcrow, Heading1, Heading2, Text, Circle, CalculatorIcon, ArrowRightLeft, CheckSquare, Baseline, Highlighter, File, Lock, Unlock, KeyRound, Share2, FileText, Download, Notebook, Star, Tag, BookCopy, Copy, MoreVertical, Check, Calendar, Bell, Plus, Minus, Heading3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +48,7 @@ import { format, parseISO } from 'date-fns';
 import { CharacterCount } from '@tiptap/extension-character-count';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
+import TiptapHighlight from '@tiptap/extension-highlight';
 
 const FONT_COLORS = [
   { name: 'Default', color: 'inherit' },
@@ -115,6 +116,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             TableHeader,
             TextStyle,
             Color,
+            TiptapHighlight.configure({ multicolor: true }),
         ],
         content: content,
         onUpdate: ({ editor }) => {
@@ -571,7 +573,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={(date) => { if(date) { setDueDate(date); setIsDueDateOpen(false); } }} />
+                                            <CalendarPicker mode="single" selected={dueDate ?? undefined} onSelect={(date) => { setDueDate(date); setIsDueDateOpen(false); }} />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -587,8 +589,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent>
-                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={(date) => { if(date) { setReminderAt(date); setIsReminderOpen(false); } }} />
-                                            {/* Add time picker here if needed */}
+                                            <CalendarPicker mode="single" selected={reminderAt ?? undefined} onSelect={(date) => { setReminderAt(date); setIsReminderOpen(false); }} />
                                         </PopoverContent>
                                     </Popover>
                                  </div>
@@ -754,3 +755,4 @@ export function NoteEditor({ noteId }: { noteId: string }) {
 
 
     
+
