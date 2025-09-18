@@ -46,6 +46,8 @@ import { Calendar as CalendarPicker } from './ui/calendar';
 import { addNotification } from '@/lib/notifications';
 import { format, parseISO } from 'date-fns';
 import { CharacterCount } from '@tiptap/extension-character-count';
+import Color from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
 
 const FONT_COLORS = [
   { name: 'Default', color: 'inherit' },
@@ -111,6 +113,8 @@ export function NoteEditor({ noteId }: { noteId: string }) {
             TableRow,
             TableCell,
             TableHeader,
+            TextStyle,
+            Color,
         ],
         content: content,
         onUpdate: ({ editor }) => {
