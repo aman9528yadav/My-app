@@ -361,6 +361,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                 link.click();
                 toast({ title: "Exported as Image!" });
             } else if (type === 'pdf') {
+                const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF({
                     orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
                     unit: 'px',
@@ -466,20 +467,7 @@ export function NoteEditor({ noteId }: { noteId: string }) {
                     </Button>
                 </div>
             </header>
-            <div className="px-4 flex-shrink-0">
-                <Input
-                    value={title}
-                    onChange={(e) => { setTitle(e.target.value); setIsDirty(true); }}
-                    placeholder={t('noteEditor.placeholders.title')}
-                    className="w-full bg-card border-border h-12 text-lg font-bold focus-visible:ring-1 focus-visible:ring-ring mb-2"
-                />
-                 <Input
-                    value={category}
-                    onChange={(e) => { setCategory(e.target.value); setIsDirty(true); }}
-                    placeholder={t('noteEditor.placeholders.category')}
-                    className="w-full bg-card border-border h-12 text-base focus-visible:ring-1 focus-visible:ring-ring"
-                />
-            </div>
+            
             <div className={cn("bg-card p-4 rounded-t-xl flex-grow flex flex-col gap-4 mt-4", backgroundStyle && `note-bg-${backgroundStyle}`)}>
                 
                 {renderAttachment()}
